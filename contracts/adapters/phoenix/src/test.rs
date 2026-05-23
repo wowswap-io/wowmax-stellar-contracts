@@ -10,7 +10,7 @@ use soroban_sdk::{
     Val,
     IntoVal
 };
-use crate::{SoroswapAggregatorPhoenixAdapter, SoroswapAggregatorPhoenixAdapterClient};
+use crate::{WowmaxStellarRouterPhoenixAdapter, WowmaxStellarRouterPhoenixAdapterClient};
 use test_utils::phoenix_setup::{PhoenixTest, MultihopClient, TokenClient, PhoenixFactory};
 // use factory::SoroswapFactoryClient;
 // use router::SoroswapRouterClient;
@@ -28,20 +28,20 @@ fn create_deployer<'a>(e: &Env) -> DeployerClient<'a> {
 }
 
 // PhoenixAggregatorAdapter Contract
-fn create_soroswap_aggregator_phoenix_adapter<'a>(e: &Env) -> SoroswapAggregatorPhoenixAdapterClient<'a> {
-    SoroswapAggregatorPhoenixAdapterClient::new(e, &e.register(SoroswapAggregatorPhoenixAdapter {}, ()))
+fn create_soroswap_aggregator_phoenix_adapter<'a>(e: &Env) -> WowmaxStellarRouterPhoenixAdapterClient<'a> {
+    WowmaxStellarRouterPhoenixAdapterClient::new(e, &e.register(WowmaxStellarRouterPhoenixAdapter {}, ()))
 }
 
 pub mod phoenix_adapter_contract {
     soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/phoenix_adapter.optimized.wasm");
-    pub type SoroswapAggregatorPhoenixAdapterClientFromWasm<'a> = Client<'a>;
+    pub type WowmaxStellarRouterPhoenixAdapterClientFromWasm<'a> = Client<'a>;
 }
-use phoenix_adapter_contract::SoroswapAggregatorPhoenixAdapterClientFromWasm;
+use phoenix_adapter_contract::WowmaxStellarRouterPhoenixAdapterClientFromWasm;
 
 pub struct PhoenixAggregatorAdapterTest<'a> {
     env: Env,
-    adapter_client: SoroswapAggregatorPhoenixAdapterClientFromWasm<'a>,
-    adapter_client_not_initialized: SoroswapAggregatorPhoenixAdapterClient<'a>,
+    adapter_client: WowmaxStellarRouterPhoenixAdapterClientFromWasm<'a>,
+    adapter_client_not_initialized: WowmaxStellarRouterPhoenixAdapterClient<'a>,
     factory_client: PhoenixFactory<'a>,
     multihop_client: MultihopClient<'a>,
     token_0: TokenClient<'a>,

@@ -1,4 +1,4 @@
-use crate::{error::AggregatorError, models::Adapter, models::Protocol};
+use crate::{error::RouterError, models::Adapter, models::Protocol};
 use soroban_sdk::{contracttype, Address, Env, Vec};
 
 #[derive(Clone)]
@@ -34,10 +34,10 @@ pub fn set_admin(e: &Env, address: Address) {
     e.storage().instance().set(&DataKey::Admin, &address)
 }
 
-pub fn get_admin(e: &Env) -> Result<Address, AggregatorError> {
+pub fn get_admin(e: &Env) -> Result<Address, RouterError> {
     match e.storage().instance().get(&DataKey::Admin) {
         Some(admin) => Ok(admin),
-        None => Err(AggregatorError::NotInitialized),
+        None => Err(RouterError::NotInitialized),
     }
 }
 
@@ -52,10 +52,10 @@ pub fn has_adapter(e: &Env, protocol_id: Protocol) -> bool {
     e.storage().instance().has(&DataKey::Adapter(protocol_id))
 }
 
-pub fn get_adapter(e: &Env, protocol_id: Protocol) -> Result<Adapter, AggregatorError> {
+pub fn get_adapter(e: &Env, protocol_id: Protocol) -> Result<Adapter, RouterError> {
     match e.storage().instance().get(&DataKey::Adapter(protocol_id)) {
         Some(adapter) => Ok(adapter),
-        None => Err(AggregatorError::ProtocolNotFound),
+        None => Err(RouterError::ProtocolNotFound),
     }
 }
 
@@ -105,7 +105,7 @@ pub fn set_pause_protocol(
     e: &Env,
     protocol_id: Protocol,
     paused: bool,
-) -> Result<(), AggregatorError> {
+) -> Result<(), RouterError> {
     let mut protocol = get_adapter(&e, protocol_id)?;
     protocol.paused = paused;
     put_adapter(&e, protocol);

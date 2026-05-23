@@ -39,22 +39,22 @@ pub fn create_soroswap_router<'a>(e: &Env) -> SoroswapRouterClient<'a> {
 }
 
 
-// SoroswapAggregatorAdapter Contract
+// WowmaxStellarRouterAdapter Contract
 // For Soroswap
 mod soroswap_adapter {
     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_adapter.optimized.wasm");
-    pub type SoroswapAggregatorAdapterForSoroswapClient<'a> = Client<'a>;
+    pub type WowmaxStellarRouterAdapterForSoroswapClient<'a> = Client<'a>;
 }
-pub use soroswap_adapter::SoroswapAggregatorAdapterForSoroswapClient;
+pub use soroswap_adapter::WowmaxStellarRouterAdapterForSoroswapClient;
 
 
 // Adapter for Soroswap
-// pub fn create_soroswap_adapter<'a>(e: &Env) -> SoroswapAggregatorAdapterForSoroswapClient<'a> {
+// pub fn create_soroswap_adapter<'a>(e: &Env) -> WowmaxStellarRouterAdapterForSoroswapClient<'a> {
 //     let adapter_address = &e.register_contract_wasm(None, soroswap_adapter::WASM);
-//     let adapter = SoroswapAggregatorAdapterForSoroswapClient::new(e, adapter_address);
+//     let adapter = WowmaxStellarRouterAdapterForSoroswapClient::new(e, adapter_address);
 //     adapter
 // }
-pub fn create_soroswap_adapter<'a>(e: &Env, deployer_client: &DeployerClient<'a>, router_contract: Address, admin: Address) -> SoroswapAggregatorAdapterForSoroswapClient<'a> {
+pub fn create_soroswap_adapter<'a>(e: &Env, deployer_client: &DeployerClient<'a>, router_contract: Address, admin: Address) -> WowmaxStellarRouterAdapterForSoroswapClient<'a> {
     let wasm_hash = e.deployer().upload_contract_wasm(soroswap_adapter::WASM);
 
     // Deploy contract using deployer, and include an init function to call
@@ -75,6 +75,6 @@ pub fn create_soroswap_adapter<'a>(e: &Env, deployer_client: &DeployerClient<'a>
         &init_fn_args,
     );
 
-    let adapter_contract = SoroswapAggregatorAdapterForSoroswapClient::new(e, &contract_id);
+    let adapter_contract = WowmaxStellarRouterAdapterForSoroswapClient::new(e, &contract_id);
     adapter_contract
 }

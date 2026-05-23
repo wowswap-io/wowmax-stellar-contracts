@@ -12,7 +12,7 @@ use soroban_sdk::{
     Val,
     IntoVal
 };
-use crate::{SoroswapAggregatorAdapter, SoroswapAggregatorAdapterClient};
+use crate::{WowmaxStellarRouterAdapter, WowmaxStellarRouterAdapterClient};
 use soroswap_setup::{SoroswapTest, router, factory, token::TokenClient};
 use factory::SoroswapFactoryClient;
 use router::SoroswapRouterClient;
@@ -29,22 +29,22 @@ fn create_deployer<'a>(e: &Env) -> DeployerClient<'a> {
     deployer
 }
 
-// SoroswapAggregatorAdapter Contract
-fn create_soroswap_aggregator_adapter<'a>(e: &Env) -> SoroswapAggregatorAdapterClient<'a> {
-    SoroswapAggregatorAdapterClient::new(e, &e.register(SoroswapAggregatorAdapter {}, ()))
+// WowmaxStellarRouterAdapter Contract
+fn create_soroswap_aggregator_adapter<'a>(e: &Env) -> WowmaxStellarRouterAdapterClient<'a> {
+    WowmaxStellarRouterAdapterClient::new(e, &e.register(WowmaxStellarRouterAdapter {}, ()))
 }
 
 pub mod soroswap_adapter_contract {
     soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/soroswap_adapter.optimized.wasm");
-    pub type SoroswapAggregatorAdapterClientFromWasm<'a> = Client<'a>;
+    pub type WowmaxStellarRouterAdapterClientFromWasm<'a> = Client<'a>;
 }
-use soroswap_adapter_contract::SoroswapAggregatorAdapterClientFromWasm;
+use soroswap_adapter_contract::WowmaxStellarRouterAdapterClientFromWasm;
 
 
-pub struct SoroswapAggregatorAdapterTest<'a> {
+pub struct WowmaxStellarRouterAdapterTest<'a> {
     env: Env,
-    adapter_contract: SoroswapAggregatorAdapterClientFromWasm<'a>,
-    adapter_contract_not_initialized: SoroswapAggregatorAdapterClient<'a>,
+    adapter_contract: WowmaxStellarRouterAdapterClientFromWasm<'a>,
+    adapter_contract_not_initialized: WowmaxStellarRouterAdapterClient<'a>,
     router_contract: SoroswapRouterClient<'a>,
     factory_contract: SoroswapFactoryClient<'a>,
     token_0: TokenClient<'a>,
@@ -54,7 +54,7 @@ pub struct SoroswapAggregatorAdapterTest<'a> {
     // admin: Address
 }
 
-impl<'a> SoroswapAggregatorAdapterTest<'a> {
+impl<'a> WowmaxStellarRouterAdapterTest<'a> {
     fn setup() -> Self {
         let test = SoroswapTest::soroswap_setup();
         
@@ -85,7 +85,7 @@ impl<'a> SoroswapAggregatorAdapterTest<'a> {
         let adapter_contract = soroswap_adapter_contract::Client::new(&test.env, &contract_id);
 
 
-        SoroswapAggregatorAdapterTest {
+        WowmaxStellarRouterAdapterTest {
             env: test.env,
             adapter_contract,
             adapter_contract_not_initialized,

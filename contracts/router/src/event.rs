@@ -16,7 +16,7 @@ pub(crate) fn initialized(e: &Env, admin: Address, adapter_addresses: Vec<Adapte
         adapter_addresses,
     };
     e.events()
-        .publish(("SoroswapAggregator", symbol_short!("init")), event);
+        .publish(("WowmaxStellarRouter", symbol_short!("init")), event);
 }
 
 // UPDATE PROTOCOL EVENT
@@ -31,7 +31,7 @@ pub(crate) fn protocols_updated(e: &Env, adapter_addresses: Vec<Adapter>) {
     let event = UpdateProtocolsEvent { adapter_addresses };
 
     e.events()
-        .publish(("SoroswapAggregator", symbol_short!("update")), event);
+        .publish(("WowmaxStellarRouter", symbol_short!("update")), event);
 }
 
 // REMOVE PROTOCOL EVENT
@@ -45,7 +45,7 @@ pub(crate) fn protocol_removed(e: &Env, protocol_id: Protocol) {
     let event = RemovedProtocolEvent { protocol_id };
 
     e.events()
-        .publish(("SoroswapAggregator", symbol_short!("removed")), event);
+        .publish(("WowmaxStellarRouter", symbol_short!("removed")), event);
 }
 
 // PAUSE/UNPAUSE PROTOCOL EVENT
@@ -62,7 +62,7 @@ pub(crate) fn protocol_paused(e: &Env, protocol_id: Protocol, paused: bool) {
         paused,
     };
     e.events()
-        .publish(("SoroswapAggregator", symbol_short!("paused")), event);
+        .publish(("WowmaxStellarRouter", symbol_short!("paused")), event);
 }
 
 #[contracttype]
@@ -75,7 +75,7 @@ pub struct NewAdminEvent {
 pub(crate) fn new_admin(e: &Env, old: Address, new: Address) {
     let event: NewAdminEvent = NewAdminEvent { old: old, new: new };
     e.events()
-        .publish(("SoroswapAggregator", symbol_short!("new_admin")), event);
+        .publish(("WowmaxStellarRouter", symbol_short!("new_admin")), event);
 }
 
 // SWAP EVENT
@@ -109,5 +109,5 @@ pub(crate) fn swap(
     };
 
     e.events()
-        .publish(("SoroswapAggregator", symbol_short!("swap")), event);
+        .publish(("WowmaxStellarRouter", symbol_short!("swap")), event);
 }

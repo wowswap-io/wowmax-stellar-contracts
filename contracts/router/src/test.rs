@@ -7,7 +7,7 @@ use soroban_sdk::{
 
 use crate::models::Adapter;
 use crate::models::Protocol;
-use crate::{SoroswapAggregator, SoroswapAggregatorClient};
+use crate::{WowmaxStellarRouter, WowmaxStellarRouterClient};
 
 // Soroswap
 mod soroswap_setup;
@@ -15,7 +15,7 @@ use soroswap_setup::{
     create_soroswap_adapter, 
     create_soroswap_factory, 
     create_soroswap_router,
-    SoroswapAggregatorAdapterForSoroswapClient,
+    WowmaxStellarRouterAdapterForSoroswapClient,
     SoroswapRouterClient,
 };
 
@@ -27,7 +27,7 @@ use test_utils::phoenix_setup::{
     deploy_and_initialize_factory as phoenix_deploy_and_initialize_factory,
     deploy_and_initialize_lp as phoenix_deploy_and_initialize_lp,
     deploy_multihop_contract as phoenix_deploy_multihop_contract,
-    SoroswapAggregatorAdapterForPhoenixClient
+    WowmaxStellarRouterAdapterForPhoenixClient
 };
 
 
@@ -57,16 +57,16 @@ use aqua_setup::{AquaSetup};
 //     deployer
 // }
 
-// SoroswapAggregator Contract [THE MAIN CONTRACT]
-fn create_soroswap_aggregator<'a>(e: &Env) -> SoroswapAggregatorClient<'a> {
-    SoroswapAggregatorClient::new(e, &e.register(SoroswapAggregator {}, ()))
+// WowmaxStellarRouter Contract [THE MAIN CONTRACT]
+fn create_soroswap_aggregator<'a>(e: &Env) -> WowmaxStellarRouterClient<'a> {
+    WowmaxStellarRouterClient::new(e, &e.register(WowmaxStellarRouter {}, ()))
 }
 
-pub mod soroswap_aggregator_contract {
+pub mod wowmax_stellar_router_contract {
     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_aggregator.optimized.wasm");
-    pub type SoroswapAggregatorClientFromWasm<'a> = Client<'a>;
+    pub type WowmaxStellarRouterClientFromWasm<'a> = Client<'a>;
 }
-use soroswap_aggregator_contract::{SoroswapAggregatorClientFromWasm, Adapter as AdapterFromWasm};
+use wowmax_stellar_router_contract::{WowmaxStellarRouterClientFromWasm, Adapter as AdapterFromWasm};
 
 
 // Token Contract
@@ -88,18 +88,18 @@ pub fn create_token_contract<'a>(e: &Env, admin: &Address) -> TokenClient<'a> {
 
 
 // Helper function to initialize / update soroswap aggregator protocols
-pub fn create_protocols_addresses_from_wasm(test: &SoroswapAggregatorTest) -> Vec<AdapterFromWasm> {
+pub fn create_protocols_addresses_from_wasm(test: &WowmaxStellarRouterTest) -> Vec<AdapterFromWasm> {
     vec![
         &test.env,
         AdapterFromWasm {
-            protocol_id: soroswap_aggregator_contract::Protocol::Soroswap,
+            protocol_id: wowmax_stellar_router_contract::Protocol::Soroswap,
             router: test.soroswap_router_address.clone(),
             paused: false,
         }
     ]
 }
 
-pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
+pub fn create_protocols_addresses(test: &WowmaxStellarRouterTest) -> Vec<Adapter> {
     vec![
         &test.env,
         Adapter {
@@ -110,7 +110,7 @@ pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter>
     ]
 }
 
-// pub fn create_soroswap_phoenix_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
+// pub fn create_soroswap_phoenix_addresses(test: &WowmaxStellarRouterTest) -> Vec<Adapter> {
 //     vec![
 //         &test.env,
 //         Adapter {
@@ -137,29 +137,29 @@ pub fn generate_adapter_objects_for_deployer(
     vec![
         env,
         AdapterFromWasm {
-            protocol_id: soroswap_aggregator_contract::Protocol::Soroswap,
+            protocol_id: wowmax_stellar_router_contract::Protocol::Soroswap,
             router: soroswap_router_address.clone(),
             paused: false,
         },
         AdapterFromWasm {
-            protocol_id: soroswap_aggregator_contract::Protocol::Phoenix,
+            protocol_id: wowmax_stellar_router_contract::Protocol::Phoenix,
             router: phoenix_multihop_address.clone(),
             paused: false,
         },
         AdapterFromWasm {
-            protocol_id: soroswap_aggregator_contract::Protocol::Comet,
+            protocol_id: wowmax_stellar_router_contract::Protocol::Comet,
             router: comet_router_address.clone(),
             paused: false,
         },
         AdapterFromWasm {
-            protocol_id: soroswap_aggregator_contract::Protocol::Aqua,
+            protocol_id: wowmax_stellar_router_contract::Protocol::Aqua,
             router: aqua_router_address.clone(),
             paused: false,
         },
     ]
 }
 
-// pub fn new_update_adapters_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
+// pub fn new_update_adapters_addresses(test: &WowmaxStellarRouterTest) -> Vec<Adapter> {
 //     vec![
 //         &test.env,
 //         Adapter {
@@ -170,18 +170,18 @@ pub fn generate_adapter_objects_for_deployer(
 //     ]
 // }
 
-// pub fn new_update_adapters_addresses_deployer(test: &SoroswapAggregatorTest) -> Vec<AdapterFromWasm> {
+// pub fn new_update_adapters_addresses_deployer(test: &WowmaxStellarRouterTest) -> Vec<AdapterFromWasm> {
 //     vec![
 //         &test.env,
 //         AdapterFromWasm {
-//             protocol_id: soroswap_aggregator_contract::Protocol::Soroswap,
+//             protocol_id: wowmax_stellar_router_contract::Protocol::Soroswap,
 //             router: test.soroswap_router_address.clone(),
 //             paused: false,
 //         },
 //     ]
 // }
 
-// pub fn create_only_soroswap_protocol_address(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
+// pub fn create_only_soroswap_protocol_address(test: &WowmaxStellarRouterTest) -> Vec<Adapter> {
 //     vec![&test.env,
 //         Adapter {
 //             protocol_id: dex_constants::SOROSWAP,
@@ -190,7 +190,7 @@ pub fn generate_adapter_objects_for_deployer(
 //     ]
 // }
 
-// pub fn create_only_phoenix_protocol_address(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
+// pub fn create_only_phoenix_protocol_address(test: &WowmaxStellarRouterTest) -> Vec<Adapter> {
 //     vec![&test.env,
 //         Adapter {
 //             protocol_id: dex_constants::PHOENIX,
@@ -205,14 +205,14 @@ pub fn generate_salt(initial: u8) -> [u8; 32] {
     salt
 }
 
-pub struct SoroswapAggregatorTest<'a> {
+pub struct WowmaxStellarRouterTest<'a> {
     env: Env,
-    aggregator_contract: SoroswapAggregatorClientFromWasm<'a>,
-    aggregator_contract_not_initialized: SoroswapAggregatorClient<'a>,
+    aggregator_contract: WowmaxStellarRouterClientFromWasm<'a>,
+    aggregator_contract_not_initialized: WowmaxStellarRouterClient<'a>,
     soroswap_router_contract: SoroswapRouterClient<'a>,
     // soroswap_factory_contract: SoroswapFactoryClient<'a>,
-    soroswap_adapter_contract: SoroswapAggregatorAdapterForSoroswapClient<'a>,
-    phoenix_adapter_contract: SoroswapAggregatorAdapterForPhoenixClient<'a>,
+    soroswap_adapter_contract: WowmaxStellarRouterAdapterForSoroswapClient<'a>,
+    phoenix_adapter_contract: WowmaxStellarRouterAdapterForPhoenixClient<'a>,
     comet_adapter_contract: CometAdapterClient<'a>,
     token_0: TokenClient<'a>,
     token_1: TokenClient<'a>,
@@ -226,7 +226,7 @@ pub struct SoroswapAggregatorTest<'a> {
 }
 
 
-impl<'a> SoroswapAggregatorTest<'a> {
+impl<'a> WowmaxStellarRouterTest<'a> {
     fn setup() -> Self {
         let env = Env::default();
         env.mock_all_auths();
@@ -384,7 +384,7 @@ impl<'a> SoroswapAggregatorTest<'a> {
 
         let comet_adapter_contract = create_comet_adapter(&env, &deployer_client, comet_pair.address.clone(), admin.clone());
 
-        let wasm_hash = env.deployer().upload_contract_wasm(soroswap_aggregator_contract::WASM);
+        let wasm_hash = env.deployer().upload_contract_wasm(wowmax_stellar_router_contract::WASM);
 
 
         // AQUA
@@ -394,22 +394,22 @@ impl<'a> SoroswapAggregatorTest<'a> {
         let initialize_aggregator_addresses = vec![
             &env,
             AdapterFromWasm {
-                protocol_id: soroswap_aggregator_contract::Protocol::Soroswap,
+                protocol_id: wowmax_stellar_router_contract::Protocol::Soroswap,
                 router: soroswap_router_contract.address.clone(),
                 paused: false,
             },
             AdapterFromWasm {
-                protocol_id: soroswap_aggregator_contract::Protocol::Phoenix,
+                protocol_id: wowmax_stellar_router_contract::Protocol::Phoenix,
                 router: phoenix_multihop_client.address.clone(),
                 paused: false,
             },
             AdapterFromWasm {
-                protocol_id: soroswap_aggregator_contract::Protocol::Comet,
+                protocol_id: wowmax_stellar_router_contract::Protocol::Comet,
                 router: comet_pair.address.clone(),
                 paused: false,
             },
             AdapterFromWasm {
-                protocol_id: soroswap_aggregator_contract::Protocol::Aqua,
+                protocol_id: wowmax_stellar_router_contract::Protocol::Aqua,
                 router: aqua_setup.router.address.clone(),
                 paused: false,
             },
@@ -426,10 +426,10 @@ impl<'a> SoroswapAggregatorTest<'a> {
             &init_fn_args,
         );
 
-        let aggregator_contract = SoroswapAggregatorClientFromWasm::new(&env, &contract_id);
+        let aggregator_contract = WowmaxStellarRouterClientFromWasm::new(&env, &contract_id);
         let soroswap_router_address = soroswap_router_contract.address.clone();
 
-        SoroswapAggregatorTest {
+        WowmaxStellarRouterTest {
             env,
             aggregator_contract,
             aggregator_contract_not_initialized,

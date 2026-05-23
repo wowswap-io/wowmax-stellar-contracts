@@ -1,11 +1,11 @@
 extern crate std;
-use crate::error::AggregatorError;
-use crate::test::{create_protocols_addresses, create_protocols_addresses_from_wasm, generate_adapter_objects_for_deployer, SoroswapAggregatorTest};
-use super::soroswap_aggregator_contract::AggregatorError as AggregatorErrorDeployer;
+use crate::error::RouterError;
+use crate::test::{create_protocols_addresses, create_protocols_addresses_from_wasm, generate_adapter_objects_for_deployer, WowmaxStellarRouterTest};
+use super::wowmax_stellar_router_contract::RouterError as RouterErrorDeployer;
 
 #[test]
 fn test_initialize_and_get_values() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -37,15 +37,15 @@ fn test_initialize_and_get_values() {
 
 #[test]
 fn test_get_admin_not_yet_initialized() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let result = test.aggregator_contract_not_initialized.try_get_admin();
 
-    assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
+    assert_eq!(result, Err(Ok(RouterError::NotInitialized)));
 }
 
 #[test]
 fn test_initialize_twice() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -57,13 +57,13 @@ fn test_initialize_twice() {
         .try_initialize(&test.admin, &initialize_aggregator_addresses);
     assert_eq!(
         result_second_init,
-        (Err(Ok(AggregatorError::AlreadyInitialized)))
+        (Err(Ok(RouterError::AlreadyInitialized)))
     );
 }
 
 #[test]
 fn test_initialize_twice_deployer() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
 
     //Initialize aggregator
     let initialize_aggregator_addresses = generate_adapter_objects_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone(),
@@ -76,6 +76,6 @@ fn test_initialize_twice_deployer() {
         .try_initialize(&test.admin, &initialize_aggregator_addresses);
     assert_eq!(
         result_second_init,
-        (Err(Ok(AggregatorErrorDeployer::AlreadyInitialized)))
+        (Err(Ok(RouterErrorDeployer::AlreadyInitialized)))
     );
 }

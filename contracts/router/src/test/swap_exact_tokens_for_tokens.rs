@@ -1,6 +1,6 @@
 extern crate std;
-use crate::error::AggregatorError as AggregatorErrorFromCrate;
-use crate::test::SoroswapAggregatorTest;
+use crate::error::RouterError as RouterErrorFromCrate;
+use crate::test::WowmaxStellarRouterTest;
 // use crate::DexDistribution;
 use soroban_sdk::{Address, Vec, vec, BytesN, Symbol};
 use soroban_sdk::token::TokenClient;
@@ -12,8 +12,8 @@ use soroban_sdk::FromVal;
 
 
 
-use super::soroswap_aggregator_contract::{AggregatorError, DexDistribution};
-use super::soroswap_aggregator_contract::Protocol;
+use super::wowmax_stellar_router_contract::{RouterError, DexDistribution};
+use super::wowmax_stellar_router_contract::Protocol;
 
 // use soroban_sdk::{
 //     IntoVal,
@@ -28,7 +28,7 @@ use super::soroswap_aggregator_contract::Protocol;
 
 #[test]
 fn swap_exact_tokens_for_tokens_not_initialized() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let result = test.aggregator_contract_not_initialized.try_swap_exact_tokens_for_tokens(
         &test.token_0.address.clone(),
         &test.token_1.address.clone(),
@@ -38,13 +38,13 @@ fn swap_exact_tokens_for_tokens_not_initialized() {
         &test.user.clone(),
         &100,
     );
-    assert_eq!(result, Err(Ok(AggregatorErrorFromCrate::NotInitialized)));
+    assert_eq!(result, Err(Ok(RouterErrorFromCrate::NotInitialized)));
 }
 
 #[test]
 fn swap_exact_tokens_for_tokens_negative_amount_in_soroswap() {
     // creat the test
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     // Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
     // test.aggregator_contract_not_initialized
@@ -75,14 +75,14 @@ fn swap_exact_tokens_for_tokens_negative_amount_in_soroswap() {
         &test.user.clone(),
         &deadline,
     );
-    assert_eq!(result, Err(Ok(AggregatorError::NegibleAmount)));
+    assert_eq!(result, Err(Ok(RouterError::NegibleAmount)));
 
 }
 
 #[test]
 fn swap_exact_tokens_for_tokens_negative_amount_in_aqua() {
     // creat the test
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     // Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
     // test.aggregator_contract_not_initialized
@@ -113,14 +113,14 @@ fn swap_exact_tokens_for_tokens_negative_amount_in_aqua() {
         &test.user.clone(),
         &deadline,
     );
-    assert_eq!(result, Err(Ok(AggregatorError::NegibleAmount)));
+    assert_eq!(result, Err(Ok(RouterError::NegibleAmount)));
 }
 
 
 #[test]
 fn swap_exact_tokens_for_tokens_negible_amount() {
     // creat the test
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     // Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
     // test.aggregator_contract_not_initialized
@@ -168,7 +168,7 @@ fn swap_exact_tokens_for_tokens_negible_amount() {
         &deadline,
     );
 
-    assert_eq!(result, Err(Ok(AggregatorError::NegibleAmount)));
+    assert_eq!(result, Err(Ok(RouterError::NegibleAmount)));
 
 }
 
@@ -176,17 +176,17 @@ fn swap_exact_tokens_for_tokens_negible_amount() {
 // We will allow `amount_out_min` to be negative in `swap_exact_tokens_for_tokens_negative_amount_out_min`.
 // Calling `swap_exact_tokens_for_tokens_negative_amount_out_min` with `amount_out_min` negative
 // is is similar of calling it with `amount_out_min=0`.
-// This is because then, the Aggregator checks
+// This is because then, the Router checks
 
 // if final_amount_out < amount_out_min {
-//     return Err(AggregatorError::InsufficientOutputAmount);
+//     return Err(RouterError::InsufficientOutputAmount);
 // }
 
 // #[test]
 // #[should_panic(expected = "HostError: Error(Contract, #502)")] //Negative not allowed
 // fn swap_exact_tokens_for_tokens_negative_amount_out_min() {
 //     // creat the test
-//     let test = SoroswapAggregatorTest::setup();
+//     let test = WowmaxStellarRouterTest::setup();
 //     let mut distribution_vec = Vec::new(&test.env);
     
 //     let mut path: Vec<Address> = Vec::new(&test.env);
@@ -217,7 +217,7 @@ fn swap_exact_tokens_for_tokens_negible_amount() {
 #[should_panic(expected = "HostError: Error(Contract, #503)")]
 fn swap_exact_tokens_for_tokens_deadline_expired() {
     // creat the test
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     // Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
     // test.aggregator_contract_not_initialized
@@ -251,7 +251,7 @@ fn swap_exact_tokens_for_tokens_deadline_expired() {
 #[test]
 fn swap_exact_tokens_for_tokens_distribution_over_max() {
     // creat the test
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -281,12 +281,12 @@ fn swap_exact_tokens_for_tokens_distribution_over_max() {
         &deadline,
     );
     // compare the error
-    assert_eq!(result, Err(Ok(AggregatorError::DistributionLengthExceeded)));
+    assert_eq!(result, Err(Ok(RouterError::DistributionLengthExceeded)));
 }
 
 #[test]
 fn swap_exact_tokens_for_tokens_zero_parts() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -320,12 +320,12 @@ fn swap_exact_tokens_for_tokens_zero_parts() {
         &deadline,
     );
     // compare the error
-    assert_eq!(result, Err(Ok(AggregatorError::ZeroDistributionPart)));
+    assert_eq!(result, Err(Ok(RouterError::ZeroDistributionPart)));
 }
 
 // #[test]
 // fn swap_exact_tokens_for_tokens_protocol_not_found() {
-//     let test = SoroswapAggregatorTest::setup();
+//     let test = WowmaxStellarRouterTest::setup();
 //     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 //     // Initialize aggregator
 //     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -355,12 +355,12 @@ fn swap_exact_tokens_for_tokens_zero_parts() {
 //         &deadline,
 //     );
 //     // compare the error
-//     assert_eq!(result, Err(Ok(AggregatorError::ProtocolNotFound)));
+//     assert_eq!(result, Err(Ok(RouterError::ProtocolNotFound)));
 // }
 
 #[test]
 fn swap_exact_tokens_for_tokens_paused_protocol() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -395,13 +395,13 @@ fn swap_exact_tokens_for_tokens_paused_protocol() {
         &deadline,
     );
     // compare the error
-    assert_eq!(result, Err(Ok(AggregatorError::ProtocolPaused)));
+    assert_eq!(result, Err(Ok(RouterError::ProtocolPaused)));
 }
 
 
 #[test]
 fn swap_exact_tokens_for_tokens_malformed_path_wrong_start() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -436,13 +436,13 @@ fn swap_exact_tokens_for_tokens_malformed_path_wrong_start() {
         &deadline,
     );
     // compare the error
-    assert_eq!(result, Err(Ok(AggregatorError::InvalidPath)));
+    assert_eq!(result, Err(Ok(RouterError::InvalidPath)));
 }
 
 
 #[test]
 fn swap_exact_tokens_for_tokens_malformed_path_wrong_end() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -477,12 +477,12 @@ fn swap_exact_tokens_for_tokens_malformed_path_wrong_end() {
         &deadline,
     );
     // compare the error
-    assert_eq!(result, Err(Ok(AggregatorError::InvalidPath)));
+    assert_eq!(result, Err(Ok(RouterError::InvalidPath)));
 }
 
 #[test]
 fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -517,12 +517,12 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
         &deadline,
     );
     // compare the error
-    assert_eq!(result, Err(Ok(AggregatorError::InsufficientOutputAmount)));
+    assert_eq!(result, Err(Ok(RouterError::InsufficientOutputAmount)));
 }
 
 #[test]
 fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -648,7 +648,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol() {
 
 #[test]
 fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol_two_hops() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -724,7 +724,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol_two_hops() {
 
 #[test]
 fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -802,7 +802,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
         &deadline,
     );
     // compare the error
-    assert_eq!(result, Err(Ok(AggregatorError::InsufficientOutputAmount)));
+    assert_eq!(result, Err(Ok(RouterError::InsufficientOutputAmount)));
 
     // check balance before
     let user_balance_before_0 = test.token_0.balance(&test.user);
@@ -851,7 +851,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
 }
 #[test]
 fn swap_exact_tokens_for_tokens_succeed_correctly_two_protocols() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     // let initialize_aggregator_addresses = create_soroswap_phoenix_addresses(&test);
@@ -923,7 +923,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_two_protocols() {
         &deadline,
     );
     // compare the error
-    assert_eq!(result, Err(Ok(AggregatorError::InsufficientOutputAmount)));
+    assert_eq!(result, Err(Ok(RouterError::InsufficientOutputAmount)));
 
     // check balance before
     let user_balance_before_0 = test.token_0.balance(&test.user);
@@ -974,7 +974,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_two_protocols() {
 
 #[test]
 fn swap_exact_tokens_for_tokens_succeed_comet() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
@@ -1052,7 +1052,7 @@ fn swap_exact_tokens_for_tokens_succeed_comet() {
 
 #[test]
 fn swap_exact_tokens_for_tokens_succeed_comet_soroswap_two_hops() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
     // call the function
@@ -1171,7 +1171,7 @@ fn swap_exact_tokens_for_tokens_succeed_comet_soroswap_two_hops() {
 
 #[test]
 fn swap_exact_tokens_for_tokens_missing_hash_aqua() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
     let mut distribution_vec = Vec::new(&test.env);
@@ -1200,14 +1200,14 @@ fn swap_exact_tokens_for_tokens_missing_hash_aqua() {
             &deadline,
         );
 
-    assert_eq!(result, Err(Ok(AggregatorError::MissingPoolHashes)));
+    assert_eq!(result, Err(Ok(RouterError::MissingPoolHashes)));
 }
 
 
 
 #[test]
 fn try_swap_exact_tokens_for_tokens_invalid_bytes_lenght_aqua() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
     let mut distribution_vec = Vec::new(&test.env);
@@ -1240,14 +1240,14 @@ fn try_swap_exact_tokens_for_tokens_invalid_bytes_lenght_aqua() {
             &deadline,
         );
 
-    assert_eq!(result, Err(Ok(AggregatorError::WrongPoolHashesLength)));
+    assert_eq!(result, Err(Ok(RouterError::WrongPoolHashesLength)));
 }
 
 #[test]
 // panic with error PoolNotFound = 404,
 #[should_panic(expected = "Error(Contract, #404)")]
 fn try_swap_tokens_for_exact_tokens_pool_not_found_aqua() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
    
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
@@ -1288,7 +1288,7 @@ fn try_swap_tokens_for_exact_tokens_pool_not_found_aqua() {
 
 #[test]
 fn swap_exact_tokens_for_tokens_constant_product_pool_1_hop_aqua() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let aqua_setup = test.aqua_setup;
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
@@ -1407,7 +1407,7 @@ fn swap_exact_tokens_for_tokens_constant_product_pool_1_hop_aqua() {
 
 #[test]
 fn swap_exact_tokens_for_tokens_constant_product_pool_2_hops() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let aqua_setup = test.aqua_setup;
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 

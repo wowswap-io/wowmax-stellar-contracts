@@ -165,7 +165,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
         &PoolType::Xyk //PoolType,
     ); 
     
-    // TODO: Eliminate this check. The overall in max is checked by the Aggregator
+    // TODO: Eliminate this check. The overall in max is checked by the Router
     // Removing this check will reduce the amount of instructions/
     // TODO: Do Benchmarking
     if reverse_simulated_swap.offer_amount > *amount_in_max {

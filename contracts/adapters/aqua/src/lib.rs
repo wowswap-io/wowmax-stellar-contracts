@@ -39,10 +39,10 @@ fn check_initialized(e: &Env) -> Result<(), AdapterError> {
 }
 
 #[contract]
-struct SoroswapAggregatorAquaAdapter;
+struct WowmaxStellarRouterAquaAdapter;
 
 #[contractimpl]
-impl AdapterTrait for SoroswapAggregatorAquaAdapter {
+impl AdapterTrait for WowmaxStellarRouterAquaAdapter {
     
     /// Initializes the contract and sets the Aqua multihop address.
     ///

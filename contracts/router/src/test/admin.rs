@@ -7,12 +7,12 @@ use soroban_sdk::{
 };
 
 extern crate std;
-use crate::error::AggregatorError;
-use crate::test::{create_protocols_addresses, SoroswapAggregatorTest};
+use crate::error::RouterError;
+use crate::test::{create_protocols_addresses, WowmaxStellarRouterTest};
 
 #[test]
 fn set_admin() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -36,14 +36,14 @@ fn set_admin() {
 // test non initialized
 #[test]
 fn test_set_admin_initialized() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let new_admin = Address::generate(&test.env);
 
     let result = test
         .aggregator_contract_not_initialized
         .try_set_admin(&new_admin);
 
-    assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
+    assert_eq!(result, Err(Ok(RouterError::NotInitialized)));
 }
 
 
@@ -52,7 +52,7 @@ fn test_set_admin_initialized() {
 
 #[test]
 fn test_set_admin_with_mock_auth() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);

@@ -10,7 +10,7 @@ mod models;
 mod storage;
 mod test;
 
-use error::AggregatorError;
+use error::RouterError;
 use models::{Protocol, Adapter, DexDistribution, MAX_DISTRIBUTION_LENGTH};
 use wowmax_adapter_interface::AdapterClient;
 use storage::{
@@ -21,15 +21,15 @@ use storage::{
 // Minimum amount to be traded
 const MIN_AMOUNT: i128 = 10;
 
-fn check_initialized(e: &Env) -> Result<(), AggregatorError> {
+fn check_initialized(e: &Env) -> Result<(), RouterError> {
     if is_initialized(e) {
         Ok(())
     } else {
-        Err(AggregatorError::NotInitialized)
+        Err(RouterError::NotInitialized)
     }
 }
 
-fn check_admin(e: &Env) -> Result<(), AggregatorError> {
+fn check_admin(e: &Env) -> Result<(), RouterError> {
     let admin: Address = get_admin(&e)?;
     admin.require_auth();
     Ok(())
@@ -39,16 +39,16 @@ fn check_parameters(
     e: &Env,
     to: Address,
     distribution: Vec<DexDistribution>,
-) -> Result<(), AggregatorError> {
+) -> Result<(), RouterError> {
     check_initialized(e)?;
     to.require_auth();
 
     if distribution.len() > MAX_DISTRIBUTION_LENGTH {
-        return Err(AggregatorError::DistributionLengthExceeded);
+        return Err(RouterError::DistributionLengthExceeded);
     }
     for dist in distribution {
         if dist.parts == 0 {
-            return Err(AggregatorError::ZeroDistributionPart);
+            return Err(RouterError::ZeroDistributionPart);
         }
     }
 
@@ -61,9 +61,9 @@ fn calculate_distribution_amounts_and_check_paths(
     token_out: &Address,
     total_amount: i128,
     distribution: &Vec<DexDistribution>,
-) -> Result<Vec<i128>, AggregatorError> {
+) -> Result<Vec<i128>, RouterError> {
     let total_parts: u32 = distribution.iter().try_fold(0u32, |acc, dist| {
-        acc.checked_add(dist.parts).ok_or(AggregatorError::ArithmeticError)
+        acc.checked_add(dist.parts).ok_or(RouterError::ArithmeticError)
     })?;
 
     let total_parts: i128 = total_parts.into();
@@ -73,30 +73,30 @@ fn calculate_distribution_amounts_and_check_paths(
     for (index, dist) in distribution.iter().enumerate() {
         // Check that all paths start with same token
         if dist.path.get(0) != Some(token_in.clone()) {
-            return Err(AggregatorError::InvalidPath);
+            return Err(RouterError::InvalidPath);
         }
         // check that all paths end with token_out
         if dist.path.last() != Some(token_out.clone()) {
-            return Err(AggregatorError::InvalidPath);
+            return Err(RouterError::InvalidPath);
         }
 
         let swap_amount = if index == (distribution.len() - 1) as usize {
             total_amount
                 .checked_sub(total_swapped)
-                .ok_or(AggregatorError::ArithmeticError)?
+                .ok_or(RouterError::ArithmeticError)?
         } else {
             let amount = total_amount
                 .checked_mul(dist.parts.into())
                 .and_then(|prod| prod.checked_div(total_parts))
-                .ok_or(AggregatorError::ArithmeticError)?;
+                .ok_or(RouterError::ArithmeticError)?;
             total_swapped = total_swapped
                 .checked_add(amount)
-                .ok_or(AggregatorError::ArithmeticError)?;
+                .ok_or(RouterError::ArithmeticError)?;
             amount
         };
 
         if swap_amount < MIN_AMOUNT {
-            return Err(AggregatorError::NegibleAmount);
+            return Err(RouterError::NegibleAmount);
         }
 
         swap_amounts.push_back(swap_amount);
@@ -108,10 +108,10 @@ fn calculate_distribution_amounts_and_check_paths(
 pub fn get_adapter_client(
     e: &Env,
     protocol_id: Protocol,
-) -> Result<AdapterClient<'_>, AggregatorError> {
+) -> Result<AdapterClient<'_>, RouterError> {
     let adapter = get_adapter(&e, protocol_id.clone())?;
     if adapter.paused {
-        return Err(AggregatorError::ProtocolPaused);
+        return Err(RouterError::ProtocolPaused);
     }
     Ok(AdapterClient::new(&e, &adapter.router))
 }
@@ -120,7 +120,7 @@ pub fn get_adapter_client(
     SOROSWAP AGGREGATOR SMART CONTRACT INTERFACE:
 */
 
-pub trait SoroswapAggregatorTrait {
+pub trait WowmaxStellarRouterTrait {
     /* ADMIN FUNCTIONS */
 
     /// Initializes the contract and sets the soroswap_router address.
@@ -133,13 +133,13 @@ pub trait SoroswapAggregatorTrait {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError::AlreadyInitialized` error if the contract is already initialized.
+    /// Returns an `RouterError::AlreadyInitialized` error if the contract is already initialized.
     ///
     /// # Returns
     ///
     /// Returns `Ok(())` if the initialization is successful.
     fn initialize(e: Env, admin: Address, adapter_vec: Vec<Adapter>)
-        -> Result<(), AggregatorError>;
+        -> Result<(), RouterError>;
 
     /// Updates the adapters in the contract.
     ///
@@ -153,12 +153,12 @@ pub trait SoroswapAggregatorTrait {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if the contract is not initialized or if the caller is not the admin.
+    /// Returns an `RouterError` if the contract is not initialized or if the caller is not the admin.
     ///
     /// # Returns
     ///
     /// Returns `Ok(())` if the adapters are successfully updated.
-    fn update_adapters(e: Env, adapter_vec: Vec<Adapter>) -> Result<(), AggregatorError>;
+    fn update_adapters(e: Env, adapter_vec: Vec<Adapter>) -> Result<(), RouterError>;
 
     /// Removes an adapter from the contract.
     ///
@@ -171,12 +171,12 @@ pub trait SoroswapAggregatorTrait {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if the contract is not initialized or if the caller is not the admin.
+    /// Returns an `RouterError` if the contract is not initialized or if the caller is not the admin.
     ///
     /// # Returns
     ///
     /// Returns `Ok(())` if the adapter is successfully removed.
-    fn remove_adapter(e: Env, protocol_id: Protocol) -> Result<(), AggregatorError>;
+    fn remove_adapter(e: Env, protocol_id: Protocol) -> Result<(), RouterError>;
 
     /// Sets the paused state of the protocol in the aggregator.
     ///
@@ -186,8 +186,8 @@ pub trait SoroswapAggregatorTrait {
     /// * `paused` - The boolean value indicating whether the protocol should be paused or not.
     ///
     /// # Returns
-    /// Returns `Ok(())` if the operation is successful, otherwise returns an `AggregatorError`.
-    fn set_pause(e: Env, protocol_id: Protocol, paused: bool) -> Result<(), AggregatorError>;
+    /// Returns `Ok(())` if the operation is successful, otherwise returns an `RouterError`.
+    fn set_pause(e: Env, protocol_id: Protocol, paused: bool) -> Result<(), RouterError>;
 
     /// Upgrades the contract with new WebAssembly (WASM) code.
     ///
@@ -200,12 +200,12 @@ pub trait SoroswapAggregatorTrait {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if the contract is not initialized or if the caller is not the admin.
+    /// Returns an `RouterError` if the contract is not initialized or if the caller is not the admin.
     ///
     /// # Returns
     ///
     /// Returns `Ok(())` if the upgrade is successful.
-    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), AggregatorError>;
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), RouterError>;
 
     /// Sets the `admin` address.
     ///
@@ -216,8 +216,8 @@ pub trait SoroswapAggregatorTrait {
     ///
     /// # Errors
     ///
-    /// Returns an error if the Aggregator is not yet initialized or if the caller is not the existing `admin`.
-    fn set_admin(e: Env, new_admin: Address) -> Result<(), AggregatorError>;
+    /// Returns an error if the Router is not yet initialized or if the caller is not the existing `admin`.
+    fn set_admin(e: Env, new_admin: Address) -> Result<(), RouterError>;
 
     /* SWAP FUNCTION */
 
@@ -239,7 +239,7 @@ pub trait SoroswapAggregatorTrait {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if any of the following conditions are met:
+    /// Returns an `RouterError` if any of the following conditions are met:
     /// - The parameters are invalid.
     /// - The swap amounts calculation fails.
     /// - There is an arithmetic error.
@@ -257,7 +257,7 @@ pub trait SoroswapAggregatorTrait {
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
-    ) -> Result<Vec<Vec<i128>>, AggregatorError>;
+    ) -> Result<Vec<Vec<i128>>, RouterError>;
 
     /// Swaps tokens for an exact amount of output tokens across multiple DEXes.
     ///
@@ -277,7 +277,7 @@ pub trait SoroswapAggregatorTrait {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if any of the following conditions are met:
+    /// Returns an `RouterError` if any of the following conditions are met:
     /// - The parameters are invalid.
     /// - The swap amounts calculation fails.
     /// - There is an arithmetic error.
@@ -295,7 +295,7 @@ pub trait SoroswapAggregatorTrait {
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
-    ) -> Result<Vec<Vec<i128>>, AggregatorError>;
+    ) -> Result<Vec<Vec<i128>>, RouterError>;
 
     /*  *** Read only functions: *** */
 
@@ -309,12 +309,12 @@ pub trait SoroswapAggregatorTrait {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if the contract is not initialized.
+    /// Returns an `RouterError` if the contract is not initialized.
     ///
     /// # Returns
     ///
     /// Returns the address of the current administrator if the operation is successful.
-    fn get_admin(e: &Env) -> Result<Address, AggregatorError>;
+    fn get_admin(e: &Env) -> Result<Address, RouterError>;
 
     /// Retrieves the list of adapters registered in the contract.
     ///
@@ -326,12 +326,12 @@ pub trait SoroswapAggregatorTrait {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if the contract is not initialized or if there are issues retrieving adapters.
+    /// Returns an `RouterError` if the contract is not initialized or if there are issues retrieving adapters.
     ///
     /// # Returns
     ///
     /// Returns a vector of `Adapter` objects if the operation is successful.
-    fn get_adapters(e: &Env) -> Result<Vec<Adapter>, AggregatorError>;
+    fn get_adapters(e: &Env) -> Result<Vec<Adapter>, RouterError>;
 
 
     /// Retrieves the paused state of a specific protocol adapter.
@@ -345,12 +345,12 @@ pub trait SoroswapAggregatorTrait {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if there are issues retrieving the adapter or if the protocol ID is not found.
+    /// Returns an `RouterError` if there are issues retrieving the adapter or if the protocol ID is not found.
     ///
     /// # Returns
     ///
     /// Returns `true` if the adapter is paused, otherwise `false`.
-    fn get_paused(e: &Env, protocol_id: Protocol) -> Result<bool, AggregatorError>;
+    fn get_paused(e: &Env, protocol_id: Protocol) -> Result<bool, RouterError>;
 
     /// Retrieves the version number of the contract.
     ///
@@ -364,10 +364,10 @@ pub trait SoroswapAggregatorTrait {
 }
 
 #[contract]
-struct SoroswapAggregator;
+struct WowmaxStellarRouter;
 
 #[contractimpl]
-impl SoroswapAggregatorTrait for SoroswapAggregator {
+impl WowmaxStellarRouterTrait for WowmaxStellarRouter {
     /* ADMIN FUNCTIONS */
 
     /// Initializes the contract and sets the soroswap_router address.
@@ -380,7 +380,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError::AlreadyInitialized` error if the contract is already initialized.
+    /// Returns an `RouterError::AlreadyInitialized` error if the contract is already initialized.
     ///
     /// # Returns
     ///
@@ -389,9 +389,9 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         e: Env,
         admin: Address,
         adapter_vec: Vec<Adapter>,
-    ) -> Result<(), AggregatorError> {
+    ) -> Result<(), RouterError> {
         if check_initialized(&e).is_ok() {
-            return Err(AggregatorError::AlreadyInitialized);
+            return Err(RouterError::AlreadyInitialized);
         }
         
         admin.require_auth();
@@ -421,12 +421,12 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if the contract is not initialized or if the caller is not the admin.
+    /// Returns an `RouterError` if the contract is not initialized or if the caller is not the admin.
     ///
     /// # Returns
     ///
     /// Returns `Ok(())` if the adapters are successfully updated.
-    fn update_adapters(e: Env, adapter_vec: Vec<Adapter>) -> Result<(), AggregatorError> {
+    fn update_adapters(e: Env, adapter_vec: Vec<Adapter>) -> Result<(), RouterError> {
         check_admin(&e)?;
 
         for adapter in adapter_vec.iter() {
@@ -449,12 +449,12 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if the contract is not initialized or if the caller is not the admin.
+    /// Returns an `RouterError` if the contract is not initialized or if the caller is not the admin.
     ///
     /// # Returns
     ///
     /// Returns `Ok(())` if the adapter is successfully removed.
-    fn remove_adapter(e: Env, protocol_id: Protocol) -> Result<(), AggregatorError> {
+    fn remove_adapter(e: Env, protocol_id: Protocol) -> Result<(), RouterError> {
         check_admin(&e)?;
 
         remove_adapter(&e, protocol_id.clone());
@@ -472,8 +472,8 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     /// * `paused` - The boolean value indicating whether the protocol should be paused or not.
     ///
     /// # Returns
-    /// Returns `Ok(())` if the operation is successful, otherwise returns an `AggregatorError`.
-    fn set_pause(e: Env, protocol_id: Protocol, paused: bool) -> Result<(), AggregatorError> {
+    /// Returns `Ok(())` if the operation is successful, otherwise returns an `RouterError`.
+    fn set_pause(e: Env, protocol_id: Protocol, paused: bool) -> Result<(), RouterError> {
         check_admin(&e)?;
 
         set_pause_protocol(&e, protocol_id.clone(), paused)?;
@@ -494,12 +494,12 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if the contract is not initialized or if the caller is not the current admin.
+    /// Returns an `RouterError` if the contract is not initialized or if the caller is not the current admin.
     ///
     /// # Returns
     ///
     /// Returns `Ok(())` if the operation is successful.
-    fn set_admin(e: Env, new_admin: Address) -> Result<(), AggregatorError> {
+    fn set_admin(e: Env, new_admin: Address) -> Result<(), RouterError> {
         check_admin(&e)?;
 
         let admin: Address = get_admin(&e)?;
@@ -520,12 +520,12 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if the contract is not initialized or if the caller is not the admin.
+    /// Returns an `RouterError` if the contract is not initialized or if the caller is not the admin.
     ///
     /// # Returns
     ///
     /// Returns `Ok(())` if the upgrade is successful.
-    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), AggregatorError> {
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), RouterError> {
         check_admin(&e)?;
 
         e.deployer().update_current_contract_wasm(new_wasm_hash);
@@ -550,7 +550,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if any of the following conditions are met:
+    /// Returns an `RouterError` if any of the following conditions are met:
     /// - The parameters are invalid.
     /// - The swap amounts calculation fails.
     /// - There is an arithmetic error.
@@ -568,7 +568,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
-    ) -> Result<Vec<Vec<i128>>, AggregatorError> {
+    ) -> Result<Vec<Vec<i128>>, RouterError> {
         extend_instance_ttl(&e);
         check_parameters(
             &e,
@@ -585,12 +585,12 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         for (index, swap_amount) in swap_amounts.iter().enumerate() {
             let dist = distribution
                 .get(index as u32)
-                .ok_or(AggregatorError::ArithmeticError)?;
+                .ok_or(RouterError::ArithmeticError)?;
             let protocol_id = dist.protocol_id;
             let adapter = get_adapter(&e, protocol_id.clone())?;
 
             if adapter.paused {
-                return Err(AggregatorError::ProtocolPaused);
+                return Err(RouterError::ProtocolPaused);
             }
 
             let response = match protocol_id {
@@ -646,10 +646,10 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         let final_token_out_balance = TokenClient::new(&e, &token_out).balance(&to);
         let final_amount_out = final_token_out_balance
             .checked_sub(initial_token_out_balance)
-            .ok_or(AggregatorError::ArithmeticError)?;
+            .ok_or(RouterError::ArithmeticError)?;
 
         if final_amount_out < amount_out_min {
-            return Err(AggregatorError::InsufficientOutputAmount);
+            return Err(RouterError::InsufficientOutputAmount);
         }
 
         event::swap(
@@ -683,7 +683,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if any of the following conditions are met:
+    /// Returns an `RouterError` if any of the following conditions are met:
     /// - The parameters are invalid.
     /// - The swap amounts calculation fails.
     /// - There is an arithmetic error.
@@ -701,7 +701,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
-    ) -> Result<Vec<Vec<i128>>, AggregatorError> {
+    ) -> Result<Vec<Vec<i128>>, RouterError> {
         extend_instance_ttl(&e);
         check_parameters(
             &e,
@@ -718,12 +718,12 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         for (index, swap_amount) in swap_amounts.iter().enumerate() {
             let dist = distribution
                 .get(index as u32)
-                .ok_or(AggregatorError::ArithmeticError)?;
+                .ok_or(RouterError::ArithmeticError)?;
             let protocol_id = dist.protocol_id;
             let adapter = get_adapter(&e, protocol_id.clone())?;
 
             if adapter.paused {
-                return Err(AggregatorError::ProtocolPaused);
+                return Err(RouterError::ProtocolPaused);
             }
 
             let response = match protocol_id {
@@ -777,10 +777,10 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         let final_token_in_balance = TokenClient::new(&e, &token_in).balance(&to);
         let final_amount_in = initial_token_in_balance
             .checked_sub(final_token_in_balance)
-            .ok_or(AggregatorError::ArithmeticError)?;
+            .ok_or(RouterError::ArithmeticError)?;
 
         if final_amount_in > amount_in_max {
-            return Err(AggregatorError::ExcessiveInputAmount);
+            return Err(RouterError::ExcessiveInputAmount);
         }
         event::swap(
             &e,
@@ -806,12 +806,12 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if the contract is not initialized.
+    /// Returns an `RouterError` if the contract is not initialized.
     ///
     /// # Returns
     ///
     /// Returns the address of the current administrator if the operation is successful.
-    fn get_admin(e: &Env) -> Result<Address, AggregatorError> {
+    fn get_admin(e: &Env) -> Result<Address, RouterError> {
         check_initialized(&e)?;
         Ok(get_admin(&e)?)
     }
@@ -826,12 +826,12 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     // ///
     // /// # Errors
     // ///
-    // /// Returns an `AggregatorError` if the contract is not initialized or if there are issues retrieving adapters.
+    // /// Returns an `RouterError` if the contract is not initialized or if there are issues retrieving adapters.
     // ///
     // /// # Returns
     // ///
     // /// Returns a vector of `Adapter` objects if the operation is successful.
-    fn get_adapters(e: &Env) -> Result<Vec<Adapter>, AggregatorError> {
+    fn get_adapters(e: &Env) -> Result<Vec<Adapter>, RouterError> {
         check_initialized(&e)?;
 
         let protocol_ids = get_protocol_ids(e);
@@ -859,12 +859,12 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// # Errors
     ///
-    /// Returns an `AggregatorError` if there are issues retrieving the adapter or if the protocol ID is not found.
+    /// Returns an `RouterError` if there are issues retrieving the adapter or if the protocol ID is not found.
     ///
     /// # Returns
     ///
     /// Returns `true` if the adapter is paused, otherwise `false`.
-    fn get_paused(e: &Env, protocol_id: Protocol) -> Result<bool, AggregatorError> {
+    fn get_paused(e: &Env, protocol_id: Protocol) -> Result<bool, RouterError> {
         let adapter = get_adapter(e, protocol_id)?;
         Ok(adapter.paused)
     }

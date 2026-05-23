@@ -2,7 +2,7 @@
 
 use soroban_sdk::{Env, Address, Vec, token::Client as TokenClient};
 
-use crate::error::AggregatorError;
+use crate::error::RouterError;
 // use phoenix_contracts::PoolType;
 
 soroban_sdk::contractimport!(
@@ -53,7 +53,7 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     path: &Vec<Address>, 
     to: &Address,
     _deadline: &u64,
-) -> Result<Vec<i128>, AggregatorError> {
+) -> Result<Vec<i128>, RouterError> {
 
     let phoenix_multihop_client = PhoenixMultihopClient::new(&e, &phoenix_multihop_address);
     let operations = convert_to_swaps(e, path);
@@ -116,7 +116,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     path: &Vec<Address>,
     to: &Address,
     _deadline: &u64,
-) -> Result<Vec<i128>, AggregatorError> {
+) -> Result<Vec<i128>, RouterError> {
 
     let phoenix_multihop_client = PhoenixMultihopClient::new(&e, &phoenix_multihop_address);
     let operations = convert_to_swaps(e, path);
@@ -165,7 +165,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
         &PoolType::Xyk //PoolType,
     ); 
     
-    // TODO: Eliminate this check. The overall in max is checked by the Aggregator
+    // TODO: Eliminate this check. The overall in max is checked by the Router
     // Removing this check will reduce the amount of instructions/
     // TODO: Do Benchmarking
     if reverse_simulated_swap.offer_amount > *amount_in_max {

@@ -1,15 +1,15 @@
 extern crate std;
-use crate::error::AggregatorError as AggregatorErrorFromCrate;
+use crate::error::RouterError as RouterErrorFromCrate;
 // use crate::models::Adapter;
-use crate::test::{create_soroswap_phoenix_comet_addresses_for_deployer, create_soroswap_router, SoroswapAggregatorTest};
+use crate::test::{create_soroswap_phoenix_comet_addresses_for_deployer, create_soroswap_router, WowmaxStellarRouterTest};
 use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
     IntoVal, Symbol,
 };
 use soroban_sdk::{vec, String, Vec};
-use super::soroswap_aggregator_contract::{AggregatorError, Adapter};
+use super::wowmax_stellar_router_contract::{RouterError, Adapter};
 
-pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &Protocol) -> Vec<Adapter> {
+pub fn new_protocol_vec(test: &WowmaxStellarRouterTest, protocol_id: &Protocol) -> Vec<Adapter> {
     let new_router = create_soroswap_router(&test.env);
     vec![
         &test.env,
@@ -23,7 +23,7 @@ pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &Protocol) -
 
 #[test]
 fn test_remove_adapter() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
 
     //Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -54,7 +54,7 @@ fn test_remove_adapter() {
         .try_get_paused(&Protocol::Soroswap);
     assert_eq!(
         is_protocol_paused,
-        Err(Ok(AggregatorError::ProtocolNotFound))
+        Err(Ok(RouterError::ProtocolNotFound))
     );
 
     //add new protocol
@@ -90,19 +90,19 @@ fn test_remove_adapter() {
 // test non initialized
 #[test]
 fn test_remove_adapter_not_yet_initialized() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let result = test
         .aggregator_contract_not_initialized
         .try_remove_adapter(&Protocol::Soroswap);
 
-    assert_eq!(result, Err(Ok(AggregatorErrorFromCrate::NotInitialized)));
+    assert_eq!(result, Err(Ok(RouterErrorFromCrate::NotInitialized)));
 }
 
 // update protocols can only be called by admin
 
 #[test]
 fn test_update_adapters_with_mock_auth() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone(), test.comet_adapter_contract.address.clone());

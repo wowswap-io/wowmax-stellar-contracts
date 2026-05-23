@@ -1,11 +1,11 @@
 use soroban_sdk::String;
-use crate::test::SoroswapAggregatorAdapterTest;
+use crate::test::WowmaxStellarRouterAdapterTest;
 use wowmax_adapter_interface::AdapterError;
 use super::soroswap_adapter_contract::AdapterError as AdapterErrorDeployer;
 
 #[test]
 fn test_initialize_and_get_values() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
 
     test.adapter_contract_not_initialized.initialize(
         &String::from_str(&test.env, "soroswap"),
@@ -20,7 +20,7 @@ fn test_initialize_and_get_values() {
 
 #[test]
 fn test_get_values() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
 
     let protocol_id = test.adapter_contract.get_protocol_id();
     assert_eq!(protocol_id, String::from_str(&test.env, "soroswap"));
@@ -32,7 +32,7 @@ fn test_get_values() {
 // test initialize twice
 #[test]
 fn test_initialize_twice() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
 
     test.adapter_contract_not_initialized.initialize(
         &String::from_str(&test.env, "soroswap"),
@@ -47,7 +47,7 @@ fn test_initialize_twice() {
 
 #[test]
 fn test_initialize_twice_deployer() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
 
     let result = test.adapter_contract.try_initialize(
         &String::from_str(&test.env, "soroswap"),
@@ -59,7 +59,7 @@ fn test_initialize_twice_deployer() {
 // test get protocol id not initialized
 #[test]
 fn test_get_protocol_id_not_initialized() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
 
     let result = test.adapter_contract_not_initialized.try_get_protocol_id(); 
     assert_eq!(result,Err(Ok(AdapterError::NotInitialized)));
@@ -68,7 +68,7 @@ fn test_get_protocol_id_not_initialized() {
 // test get protocol address not initialized
 #[test]
 fn test_get_protocol_address_not_initialized() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
 
     let result = test.adapter_contract_not_initialized.try_get_protocol_address();
     assert_eq!(result,Err(Ok(AdapterError::NotInitialized)));

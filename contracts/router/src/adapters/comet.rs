@@ -1,5 +1,5 @@
 use soroban_sdk::{vec, Address, Env, Vec};
-use crate::error::AggregatorError;
+use crate::error::RouterError;
 
 soroban_sdk::contractimport!(
     file = "./comet_contracts/comet_pool.wasm"
@@ -13,7 +13,7 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     amount_out_min: &i128,
     path: &Vec<Address>,
     to: &Address,
-) -> Result<Vec<i128>, AggregatorError> {
+) -> Result<Vec<i128>, RouterError> {
 
     let comet_client = CometPoolClient::new(&e, &comet_pool_address);
 
@@ -36,7 +36,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     amount_in_max: &i128,
     path: &Vec<Address>,
     to: &Address,
-) -> Result<Vec<i128>, AggregatorError> {
+) -> Result<Vec<i128>, RouterError> {
 
     let comet_client = CometPoolClient::new(&e, &comet_pool_address);
 

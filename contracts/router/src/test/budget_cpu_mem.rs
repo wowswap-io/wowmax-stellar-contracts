@@ -1,13 +1,13 @@
 extern crate std;
-use crate::test::{create_soroswap_phoenix_comet_addresses_for_deployer, new_update_adapters_addresses_deployer, SoroswapAggregatorTest};
+use crate::test::{create_soroswap_phoenix_comet_addresses_for_deployer, new_update_adapters_addresses_deployer, WowmaxStellarRouterTest};
 use soroban_sdk::{String, Vec, Address, testutils::Address as _};
-use super::soroswap_aggregator_contract::DexDistribution;
-use super::soroswap_aggregator_contract::Protocol;
+use super::wowmax_stellar_router_contract::DexDistribution;
+use super::wowmax_stellar_router_contract::Protocol;
 
 
 #[test]
 fn budget() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     
     //initialize ()
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);

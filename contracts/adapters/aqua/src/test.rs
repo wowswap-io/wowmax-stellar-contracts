@@ -14,7 +14,7 @@ use soroban_sdk::{
     Val,
     IntoVal
 };
-use crate::{SoroswapAggregatorAquaAdapter, SoroswapAggregatorAquaAdapterClient};
+use crate::{WowmaxStellarRouterAquaAdapter, WowmaxStellarRouterAquaAdapterClient};
 use aqua_setup::{AquaTest, TokenClient, AquaRouter};
 
 mod deployer_contract {
@@ -30,20 +30,20 @@ fn create_deployer<'a>(e: &Env) -> DeployerClient<'a> {
 }
 
 // AquaAggregatorAdapter Contract
-fn create_soroswap_aggregator_aqua_adapter<'a>(e: &Env) -> SoroswapAggregatorAquaAdapterClient<'a> {
-    SoroswapAggregatorAquaAdapterClient::new(e, &e.register(SoroswapAggregatorAquaAdapter, {}))
+fn create_soroswap_aggregator_aqua_adapter<'a>(e: &Env) -> WowmaxStellarRouterAquaAdapterClient<'a> {
+    WowmaxStellarRouterAquaAdapterClient::new(e, &e.register(WowmaxStellarRouterAquaAdapter, {}))
 }
 
 pub mod aqua_adapter_contract {
     soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/aqua_adapter.optimized.wasm");
-    pub type SoroswapAggregatorAquaAdapterClientFromWasm<'a> = Client<'a>;
+    pub type WowmaxStellarRouterAquaAdapterClientFromWasm<'a> = Client<'a>;
 }
-use aqua_adapter_contract::SoroswapAggregatorAquaAdapterClientFromWasm;
+use aqua_adapter_contract::WowmaxStellarRouterAquaAdapterClientFromWasm;
 
 pub struct AquaAggregatorAdapterTest<'a> {
     env: Env,
-    adapter_client: SoroswapAggregatorAquaAdapterClientFromWasm<'a>,
-    adapter_client_not_initialized: SoroswapAggregatorAquaAdapterClient<'a>,
+    adapter_client: WowmaxStellarRouterAquaAdapterClientFromWasm<'a>,
+    adapter_client_not_initialized: WowmaxStellarRouterAquaAdapterClient<'a>,
     router: AquaRouter<'a>,
     tokens: [TokenClient<'a>; 4],
     user: Address,

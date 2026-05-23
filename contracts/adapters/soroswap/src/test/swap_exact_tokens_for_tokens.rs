@@ -1,10 +1,10 @@
 use soroban_sdk::{Address, vec, Vec};
-use crate::test::SoroswapAggregatorAdapterTest;
+use crate::test::WowmaxStellarRouterAdapterTest;
 use wowmax_adapter_interface::AdapterError;
 
 #[test]
 fn swap_exact_tokens_for_tokens_not_initialized() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
     test.env.cost_estimate().budget().reset_unlimited();
     let path: Vec<Address> = Vec::new(&test.env);
 
@@ -24,7 +24,7 @@ fn swap_exact_tokens_for_tokens_not_initialized() {
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #502)")]
 fn swap_exact_tokens_for_tokens_amount_in_negative() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
     test.env.cost_estimate().budget().reset_unlimited();
 
     let path: Vec<Address> = Vec::new(&test.env);
@@ -42,7 +42,7 @@ fn swap_exact_tokens_for_tokens_amount_in_negative() {
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #502)")]
 fn swap_exact_tokens_for_tokens_amount_out_min_negative() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
     test.env.cost_estimate().budget().reset_unlimited();
 
     let path: Vec<Address> = Vec::new(&test.env);
@@ -60,7 +60,7 @@ fn swap_exact_tokens_for_tokens_amount_out_min_negative() {
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #503)")]
 fn swap_exact_tokens_for_tokens_expired() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
 
     let path: Vec<Address> = Vec::new(&test.env);
 
@@ -79,7 +79,7 @@ fn swap_exact_tokens_for_tokens_expired() {
 #[test]
 #[should_panic] // TODO: Test the imported error
 fn try_swap_exact_tokens_for_tokens_invalid_path() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     let path: Vec<Address> = vec![&test.env, test.token_0.address.clone()];
@@ -97,7 +97,7 @@ fn try_swap_exact_tokens_for_tokens_invalid_path() {
 #[test]
 #[should_panic] // TODO: Test the imported error
 fn try_swap_exact_tokens_for_tokens_insufficient_input_amount() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
@@ -122,7 +122,7 @@ fn try_swap_exact_tokens_for_tokens_insufficient_input_amount() {
 #[test]
 #[should_panic] // TODO: Test the imported error
 fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
@@ -156,7 +156,7 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
 
 #[test]
 fn swap_exact_tokens_for_tokens_enough_output_amount_soroswap_protocol() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;  
 
@@ -188,7 +188,7 @@ fn swap_exact_tokens_for_tokens_enough_output_amount_soroswap_protocol() {
 
 #[test]
 fn swap_exact_tokens_for_tokens_2_hops_soroswap_protocol() {
-    let test = SoroswapAggregatorAdapterTest::setup();
+    let test = WowmaxStellarRouterAdapterTest::setup();
     test.env.cost_estimate().budget().reset_unlimited();
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;  

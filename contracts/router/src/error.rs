@@ -3,7 +3,7 @@ use soroban_sdk::{self, contracterror};
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
-pub enum AggregatorError {
+pub enum RouterError {
     NotInitialized = 501,
     AlreadyInitialized = 502,
     NegativeNotAllowed = 503,

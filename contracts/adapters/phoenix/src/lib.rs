@@ -48,10 +48,10 @@ fn check_initialized(e: &Env) -> Result<(), AdapterError> {
 }
 
 #[contract]
-struct SoroswapAggregatorPhoenixAdapter;
+struct WowmaxStellarRouterPhoenixAdapter;
 
 #[contractimpl]
-impl AdapterTrait for SoroswapAggregatorPhoenixAdapter {
+impl AdapterTrait for WowmaxStellarRouterPhoenixAdapter {
     
     /// Initializes the contract and sets the Phoenix multihop address.
     ///

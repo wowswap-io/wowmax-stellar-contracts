@@ -28,10 +28,10 @@ fn check_initialized(e: &Env) -> Result<(), AdapterError> {
 }
 
 #[contract]
-struct SoroswapAggregatorAdapter;
+struct WowmaxStellarRouterAdapter;
 
 #[contractimpl]
-impl AdapterTrait for SoroswapAggregatorAdapter {
+impl AdapterTrait for WowmaxStellarRouterAdapter {
     fn initialize(
         e: Env,
         protocol_id: String,

@@ -8,7 +8,7 @@ use soroban_sdk::{
     symbol_short, testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation}, xdr::{self, ContractIdPreimage, ContractIdPreimageFromAddress, CreateContractArgsV2, Uint256}, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec, vec as sorovec,
     xdr::VecM
 };
-use soroswap_aggregator_contract::Adapter;
+use wowmax_stellar_router_contract::Adapter;
 
 // Defining contracts
 mod soroswap_adapter_contract {
@@ -25,7 +25,7 @@ mod phoenix_adapter_contract {
   );
 }
 
-mod soroswap_aggregator_contract {
+mod wowmax_stellar_router_contract {
   soroban_sdk::contractimport!(
       file =
           "../target/wasm32-unknown-unknown/release/soroswap_aggregator.optimized.wasm"
@@ -218,7 +218,7 @@ fn test_deploy_from_address_soroswap_aggregator() {
 
     // Upload the Wasm to be deployed from the deployer contract.
     // This can also be called from within a contract if needed.
-    let wasm_hash = env.deployer().upload_contract_wasm(soroswap_aggregator_contract::WASM);
+    let wasm_hash = env.deployer().upload_contract_wasm(wowmax_stellar_router_contract::WASM);
 
     // Define a deployer address that needs to authorize the deployment.
     let deployer = Address::generate(&env);
@@ -228,7 +228,7 @@ fn test_deploy_from_address_soroswap_aggregator() {
     let init_fn = Symbol::new(&env, &("initialize"));
     
     // fn initialize(e: Env, admin: Address, adapter_vec: Vec<Adapter>)
-    // -> Result<(), AggregatorError>;
+    // -> Result<(), RouterError>;
 
     let adapter_address = Address::generate(&env);
 
@@ -286,7 +286,7 @@ fn test_deploy_from_address_soroswap_aggregator() {
     assert_eq!(env.auths(), vec![(deployer.clone(), expected_auth)]);
 
     // Invoke contract to check that it is initialized.
-    let client = soroswap_aggregator_contract::Client::new(&env, &contract_id);
+    let client = wowmax_stellar_router_contract::Client::new(&env, &contract_id);
 
     // Checking admin
     let get_aggregator_admin = client.get_admin();

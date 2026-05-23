@@ -6,18 +6,18 @@ mod phoenix_adapter {
         file =
             "../target/wasm32-unknown-unknown/release/phoenix_adapter.optimized.wasm"
     );
-    pub type SoroswapAggregatorAdapterForPhoenixClient<'a> = Client<'a>;
+    pub type WowmaxStellarRouterAdapterForPhoenixClient<'a> = Client<'a>;
 }
-pub use phoenix_adapter::SoroswapAggregatorAdapterForPhoenixClient;
+pub use phoenix_adapter::WowmaxStellarRouterAdapterForPhoenixClient;
 use crate::test::install_token_wasm;
 // Adapter for phoenix
-// pub fn create_phoenix_adapter<'a>(e: &Env) -> SoroswapAggregatorAdapterForPhoenixClient<'a> {
+// pub fn create_phoenix_adapter<'a>(e: &Env) -> WowmaxStellarRouterAdapterForPhoenixClient<'a> {
 //     let adapter_address = &e.register_contract_wasm(None, phoenix_adapter::WASM);
-//     let adapter = SoroswapAggregatorAdapterForPhoenixClient::new(e, adapter_address);
+//     let adapter = WowmaxStellarRouterAdapterForPhoenixClient::new(e, adapter_address);
 //     adapter
 // }
 
-pub fn create_phoenix_adapter<'a>(e: &Env, deployer_client: &DeployerClient<'a>, multihop_contract: Address, admin: Address) -> SoroswapAggregatorAdapterForPhoenixClient<'a> {
+pub fn create_phoenix_adapter<'a>(e: &Env, deployer_client: &DeployerClient<'a>, multihop_contract: Address, admin: Address) -> WowmaxStellarRouterAdapterForPhoenixClient<'a> {
     let wasm_hash = e.deployer().upload_contract_wasm(phoenix_adapter::WASM);
 
     // Deploy contract using deployer, and include an init function to call.
@@ -38,7 +38,7 @@ pub fn create_phoenix_adapter<'a>(e: &Env, deployer_client: &DeployerClient<'a>,
         &init_fn_args,
     );
 
-    let adapter_contract = SoroswapAggregatorAdapterForPhoenixClient::new(e, &contract_id);
+    let adapter_contract = WowmaxStellarRouterAdapterForPhoenixClient::new(e, &contract_id);
     adapter_contract
 }
 

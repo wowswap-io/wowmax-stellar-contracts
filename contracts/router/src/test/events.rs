@@ -1,18 +1,18 @@
 // use crate::DexDistribution;
 use soroban_sdk::{symbol_short, testutils::{Events, Address as _}, vec, Address, IntoVal, String, Vec};
-use super::soroswap_aggregator_contract::Protocol;
+use super::wowmax_stellar_router_contract::Protocol;
 
 use crate::test::{
-    create_protocols_addresses, create_soroswap_phoenix_comet_addresses_for_deployer, new_update_adapters_addresses_deployer, SoroswapAggregatorTest
+    create_protocols_addresses, create_soroswap_phoenix_comet_addresses_for_deployer, new_update_adapters_addresses_deployer, WowmaxStellarRouterTest
 };
 
 use crate::event::InitializedEvent;
 
-use super::soroswap_aggregator_contract::{UpdateProtocolsEvent, RemovedProtocolEvent, PausedProtocolEvent, DexDistribution, SwapEvent, NewAdminEvent};
+use super::wowmax_stellar_router_contract::{UpdateProtocolsEvent, RemovedProtocolEvent, PausedProtocolEvent, DexDistribution, SwapEvent, NewAdminEvent};
 
 #[test]
 fn initialized_event() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
     test.aggregator_contract_not_initialized
         .initialize(&test.admin, &initialize_aggregator_addresses);
@@ -30,7 +30,7 @@ fn initialized_event() {
             &test.env,
             (
                 test.aggregator_contract_not_initialized.address.clone(),
-                ("SoroswapAggregator", symbol_short!("init")).into_val(&test.env),
+                ("WowmaxStellarRouter", symbol_short!("init")).into_val(&test.env),
                 (expected_initialized_event).into_val(&test.env)
             ),
         ]
@@ -47,7 +47,7 @@ fn initialized_event() {
             &test.env,
             (
                 test.aggregator_contract_not_initialized.address.clone(),
-                ("SoroswapAggregator", symbol_short!("init")).into_val(&test.env),
+                ("WowmaxStellarRouter", symbol_short!("init")).into_val(&test.env),
                 (false_initialized_event).into_val(&test.env)
             ),
         ]
@@ -60,7 +60,7 @@ fn initialized_event() {
             &test.env,
             (
                 test.aggregator_contract_not_initialized.address.clone(),
-                ("SoroswapAggregator", symbol_short!("iniit")).into_val(&test.env),
+                ("WowmaxStellarRouter", symbol_short!("iniit")).into_val(&test.env),
                 (expected_initialized_event).into_val(&test.env)
             ),
         ]
@@ -73,7 +73,7 @@ fn initialized_event() {
             &test.env,
             (
                 test.aggregator_contract_not_initialized.address,
-                ("SoroswapAggregatorr", symbol_short!("init")).into_val(&test.env),
+                ("WowmaxStellarRouterr", symbol_short!("init")).into_val(&test.env),
                 (expected_initialized_event).into_val(&test.env)
             ),
         ]
@@ -82,7 +82,7 @@ fn initialized_event() {
 
 #[test]
 fn update_adapters_event() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone(), test.comet_adapter_contract.address.clone());
@@ -109,7 +109,7 @@ fn update_adapters_event() {
             &test.env,
             (
                 test.aggregator_contract.address.clone(),
-                ("SoroswapAggregator", symbol_short!("update")).into_val(&test.env),
+                ("WowmaxStellarRouter", symbol_short!("update")).into_val(&test.env),
                 (expected_updated_event).into_val(&test.env)
             ),
         ]
@@ -125,7 +125,7 @@ fn update_adapters_event() {
             &test.env,
             (
                 test.aggregator_contract.address.clone(),
-                ("SoroswapAggregator", symbol_short!("update")).into_val(&test.env),
+                ("WowmaxStellarRouter", symbol_short!("update")).into_val(&test.env),
                 (false_updated_event).into_val(&test.env)
             ),
         ]
@@ -138,7 +138,7 @@ fn update_adapters_event() {
             &test.env,
             (
                 test.aggregator_contract_not_initialized.address.clone(),
-                ("SoroswapAggregator", symbol_short!("updat")).into_val(&test.env),
+                ("WowmaxStellarRouter", symbol_short!("updat")).into_val(&test.env),
                 (expected_updated_event).into_val(&test.env)
             ),
         ]
@@ -151,7 +151,7 @@ fn update_adapters_event() {
             &test.env,
             (
                 test.aggregator_contract_not_initialized.address,
-                ("SoroswapAggregatorr", symbol_short!("update")).into_val(&test.env),
+                ("WowmaxStellarRouterr", symbol_short!("update")).into_val(&test.env),
                 (expected_updated_event).into_val(&test.env)
             ),
         ]
@@ -160,7 +160,7 @@ fn update_adapters_event() {
 
 #[test]
 fn remove_adapter_event() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
 
     // Remove protocol
     let protocol_id = Protocol::Soroswap;
@@ -176,7 +176,7 @@ fn remove_adapter_event() {
             &test.env,
             (
                 test.aggregator_contract.address.clone(),
-                ("SoroswapAggregator", symbol_short!("removed")).into_val(&test.env),
+                ("WowmaxStellarRouter", symbol_short!("removed")).into_val(&test.env),
                 (expected_removed_event).into_val(&test.env)
             ),
         ]
@@ -190,7 +190,7 @@ fn remove_adapter_event() {
             &test.env,
             (
                 test.aggregator_contract.address.clone(),
-                ("SoroswapAggregator", symbol_short!("removed")).into_val(&test.env),
+                ("WowmaxStellarRouter", symbol_short!("removed")).into_val(&test.env),
                 (false_removed_event).into_val(&test.env)
             ),
         ]
@@ -202,7 +202,7 @@ fn remove_adapter_event() {
             &test.env,
             (
                 test.aggregator_contract.address.clone(),
-                ("SoroswapAggregator", symbol_short!("remove")).into_val(&test.env),
+                ("WowmaxStellarRouter", symbol_short!("remove")).into_val(&test.env),
                 (expected_removed_event).into_val(&test.env)
             ),
         ]
@@ -214,7 +214,7 @@ fn remove_adapter_event() {
             &test.env,
             (
                 test.aggregator_contract.address,
-                ("SoroswapAggregatorr", symbol_short!("removed")).into_val(&test.env),
+                ("WowmaxStellarRouterr", symbol_short!("removed")).into_val(&test.env),
                 (expected_removed_event).into_val(&test.env)
             ),
         ]
@@ -223,7 +223,7 @@ fn remove_adapter_event() {
 
 #[test]
 fn set_pause_event() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
 
     // Remove protocol
     let protocol_id = Protocol::Soroswap;
@@ -243,7 +243,7 @@ fn set_pause_event() {
                 &test.env,
                 (
                     test.aggregator_contract.address.clone(),
-                    ("SoroswapAggregator", symbol_short!("paused")).into_val(&test.env),
+                    ("WowmaxStellarRouter", symbol_short!("paused")).into_val(&test.env),
                     (expected_set_pause).into_val(&test.env)
                 ),
             ]
@@ -258,7 +258,7 @@ fn set_pause_event() {
                 &test.env,
                 (
                     test.aggregator_contract.address.clone(),
-                    ("SoroswapAggregator", symbol_short!("paused")).into_val(&test.env),
+                    ("WowmaxStellarRouter", symbol_short!("paused")).into_val(&test.env),
                     (false_set_pause).into_val(&test.env)
                 ),
             ]
@@ -270,7 +270,7 @@ fn set_pause_event() {
                 &test.env,
                 (
                     test.aggregator_contract.address.clone(),
-                    ("SoroswapAggregator", symbol_short!("pp")).into_val(&test.env),
+                    ("WowmaxStellarRouter", symbol_short!("pp")).into_val(&test.env),
                     (expected_set_pause).into_val(&test.env)
                 ),
             ]
@@ -282,7 +282,7 @@ fn set_pause_event() {
                 &test.env,
                 (
                     test.aggregator_contract.address.clone(),
-                    ("SoroswapAggregatorr", symbol_short!("paused")).into_val(&test.env),
+                    ("WowmaxStellarRouterr", symbol_short!("paused")).into_val(&test.env),
                     (expected_set_pause).into_val(&test.env)
                 ),
             ]
@@ -293,7 +293,7 @@ fn set_pause_event() {
 
 #[test]
 fn set_admin_event() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     
     let new_admin = Address::generate(&test.env);
 
@@ -310,7 +310,7 @@ fn set_admin_event() {
             &test.env,
             (
                 test.aggregator_contract.address.clone(),
-                ("SoroswapAggregator", symbol_short!("new_admin")).into_val(&test.env),
+                ("WowmaxStellarRouter", symbol_short!("new_admin")).into_val(&test.env),
                 (expected_set_admin).into_val(&test.env)
             ),
         ]
@@ -325,7 +325,7 @@ fn set_admin_event() {
             &test.env,
             (
                 test.aggregator_contract.address.clone(),
-                ("SoroswapAggregator", symbol_short!("new_admin")).into_val(&test.env),
+                ("WowmaxStellarRouter", symbol_short!("new_admin")).into_val(&test.env),
                 (false_set_admin).into_val(&test.env)
             ),
         ]
@@ -337,7 +337,7 @@ fn set_admin_event() {
             &test.env,
             (
                 test.aggregator_contract.address.clone(),
-                ("SoroswapAggregator", symbol_short!("new")).into_val(&test.env),
+                ("WowmaxStellarRouter", symbol_short!("new")).into_val(&test.env),
                 (expected_set_admin).into_val(&test.env)
             ),
         ]
@@ -349,7 +349,7 @@ fn set_admin_event() {
             &test.env,
             (
                 test.aggregator_contract.address.clone(),
-                ("SoroswapAggregatorr", symbol_short!("new_admin")).into_val(&test.env),
+                ("WowmaxStellarRouterr", symbol_short!("new_admin")).into_val(&test.env),
                 (expected_set_admin).into_val(&test.env)
             ),
         ]
@@ -360,7 +360,7 @@ fn set_admin_event() {
 #[test]
 fn swap_exact_tokens_for_tokens_event() {
     // create test
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
     // Initialize aggregator
@@ -410,7 +410,7 @@ fn swap_exact_tokens_for_tokens_event() {
             &test.env,
             (
                 test.aggregator_contract.address.clone(),
-                ("SoroswapAggregator", symbol_short!("swap")).into_val(&test.env),
+                ("WowmaxStellarRouter", symbol_short!("swap")).into_val(&test.env),
                 (expected_swap_event).into_val(&test.env)
             ),
         ]
@@ -420,7 +420,7 @@ fn swap_exact_tokens_for_tokens_event() {
 #[test]
 fn swap_tokens_for_exact_tokens_event() {
     // create test
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
     // Initialize aggregator
@@ -474,7 +474,7 @@ fn swap_tokens_for_exact_tokens_event() {
     // );
     // assert_eq!(
     //     swap_event.clone().1,
-    //     ("SoroswapAggregator", symbol_short!("swap")).into_val(&test.env)
+    //     ("WowmaxStellarRouter", symbol_short!("swap")).into_val(&test.env)
     // );
     // assert_eq!(
     //     swap_event.clone().1,
@@ -489,7 +489,7 @@ fn swap_tokens_for_exact_tokens_event() {
             &test.env,
             (
                 test.aggregator_contract.address.clone(),
-                ("SoroswapAggregator", symbol_short!("swap")).into_val(&test.env),
+                ("WowmaxStellarRouter", symbol_short!("swap")).into_val(&test.env),
                 (expected_swap_event).into_val(&test.env)
             ),
         ]

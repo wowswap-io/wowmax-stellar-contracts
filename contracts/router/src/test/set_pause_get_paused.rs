@@ -1,16 +1,16 @@
 
 extern crate std;
-use crate::error::AggregatorError as AggregatorErrorFromCrate;
+use crate::error::RouterError as RouterErrorFromCrate;
 // use crate::models::Adapter;
-use crate::test::{generate_adapter_objects_for_deployer, create_soroswap_router, SoroswapAggregatorTest};
+use crate::test::{generate_adapter_objects_for_deployer, create_soroswap_router, WowmaxStellarRouterTest};
 use soroban_sdk::{vec, Vec};
-use super::soroswap_aggregator_contract::Protocol;
+use super::wowmax_stellar_router_contract::Protocol;
 use crate::test::Protocol as ProtocolOriginal;
 
 
-use super::soroswap_aggregator_contract::{Adapter};
+use super::wowmax_stellar_router_contract::{Adapter};
 
-pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &Protocol) -> Vec<Adapter> {
+pub fn new_protocol_vec(test: &WowmaxStellarRouterTest, protocol_id: &Protocol) -> Vec<Adapter> {
     let new_router = create_soroswap_router(&test.env);
     vec![
         &test.env,
@@ -24,7 +24,7 @@ pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &Protocol) -
 
 #[test]
 fn test_set_pause_true_false() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
 
     //Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -282,10 +282,10 @@ fn test_set_pause_true_false() {
 // test non initialized
 #[test]
 fn test_set_pause_not_yet_initialized() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = WowmaxStellarRouterTest::setup();
     let result = test
         .aggregator_contract_not_initialized
         .try_set_pause(&ProtocolOriginal::Soroswap, &true);
 
-    assert_eq!(result, Err(Ok(AggregatorErrorFromCrate::NotInitialized)));
+    assert_eq!(result, Err(Ok(RouterErrorFromCrate::NotInitialized)));
 }
