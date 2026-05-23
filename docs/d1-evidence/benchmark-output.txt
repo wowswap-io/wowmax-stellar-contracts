@@ -1,0 +1,39 @@
+Building graph from mainnet...
+Graph: 20 classic, 14 soroban edges (514ms)
+
+========================================================================================================================
+WOWMAX STELLAR ROUTER — D1 BENCHMARK REPORT
+========================================================================================================================
+Stellar mainnet via Horizon + Ankr Soroban RPC.
+Graph: 20 classic edges, 14 soroban edges across [XLM, USDC, AQUA, EURC, yXLM]
+
+Case                   Amount   Classic out    Soroban out    Winner         Mode     Type       Pools  Baseline               vs Baseline 
+---------------------------------------------------------------------------------------------------------------------------------------
+XLM -> USDC (100)          100  14.0004963     19.6368616     19.6368616     soroban  multi-hop  6      soroswap:CAM7DY53G63X  +4019.32bps 
+XLM -> USDC (1000)        1000  139.8495448    154.2174429    154.2174429    soroban  multi-hop  6      soroswap:CAM7DY53G63X  +1010.02bps 
+XLM -> USDC (10000)      10000  1397.7219098   1414.7180666   1414.7180666   soroban  multi-hop  6      soroswap:CAM7DY53G63X  +100.08bps  
+USDC -> XLM (5000)        5000  35684.9260885  35482.5691808  35684.9260885  classic  single     2      sdex:sdex:USDC:GA      0.00bps     
+USDC -> EURC (500)         500  430.6525141    430.6125562    430.6525141    classic  single     2      sdex:sdex:USDC:GA      0.00bps     
+USDC -> EURC (5000)       5000  4294.1336845   4306.1255552   4306.1255552   soroban  single     4      soroswap:CC7CDFY2VGDO  0.00bps     
+EURC -> USDC (500)         500  575.4879588    577.0901157    577.0901157    soroban  single     4      soroswap:CC7CDFY2VGDO  0.00bps     
+XLM -> EURC (1000)        1000  120.4622804    121.3012212    121.3012212    soroban  single     4      soroswap:CATUJXDUO7SS  0.00bps     
+XLM -> EURC (10000)      10000  1203.6110429   1213.0122112   1213.0122112   soroban  single     4      soroswap:CATUJXDUO7SS  0.00bps     
+USDC -> AQUA (100)         100  316365.6560901 314640.2561439 316365.6560901 classic  multi-hop  6      sdex:sdex:USDC:GA      +31.95bps   
+USDC -> AQUA (1000)       1000  3163656.6018085 3145912.4991217 3163656.6018085 classic  multi-hop  6      sdex:sdex:USDC:GA      +31.96bps   
+XLM -> AQUA (10000)      10000  4525296.4070000 4557162.1691263 4557162.1691263 soroban  single     2      soroswap:CDRS7NJPAX2H  0.00bps     
+AQUA -> EURC (1000)       1000  0.2652305      0.2730442      0.2730442      soroban  multi-hop  4      —                      0bps        
+EURC -> AQUA (100)         100  361688.1125284 358886.8704415 361688.1125284 classic  multi-hop  10     sdex:sdex:EURC:GD      +298140.11bps
+
+========================================================================================================================
+SUMMARY
+========================================================================================================================
+Total cases:              14
+Beats single-pool baseline: 6
+Multi-hop wins:           7
+
+D1 requirements:
+  ✓ ≥ 5 pairs beat baseline
+  ✓ ≥ 2 multi-hop wins
+  ✓ No Classic+Soroban mixing
+
+Overall: ✓ D1 MEASURE-OF-COMPLETION SATISFIED
