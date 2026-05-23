@@ -15,7 +15,7 @@ use storage::{
     set_protocol_address, 
     get_protocol_address, 
 };
-use adapter_interface::{AdapterTrait, AdapterError};
+use wowmax_adapter_interface::{AdapterTrait, AdapterError};
 use protocol_interface::{protocol_swap_exact_tokens_for_tokens,
     protocol_swap_tokens_for_exact_tokens};
 

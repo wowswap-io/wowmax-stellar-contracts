@@ -2,7 +2,7 @@
 
 use soroban_sdk::{Env, Address, Vec, token::Client as TokenClient};
 use crate::storage::get_protocol_address;
-use adapter_interface::AdapterError;
+use wowmax_adapter_interface::AdapterError;
 // use phoenix_contracts::PoolType;
 
 soroban_sdk::contractimport!(

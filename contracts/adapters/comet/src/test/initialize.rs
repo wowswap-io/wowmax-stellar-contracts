@@ -1,6 +1,6 @@
 use soroban_sdk::String;
 use crate::test::CometAggregatorAdapterTest;
-use adapter_interface::AdapterError;
+use wowmax_adapter_interface::AdapterError;
 use super::comet_adapter_contract::AdapterError as AdapterErrorDeployer;
 
 #[test]

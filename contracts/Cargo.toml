@@ -1,5 +1,5 @@
 [workspace]
-members = ["adapters/*", "aggregator", "deployer", "test-utils"]
+members = ["adapters/*", "router", "deployer", "test-utils"]
 resolver = "2"
 
 [workspace.package]
@@ -11,7 +11,7 @@ homepage = "https://github.com/wowswap-io/wowmax-stellar-contracts"
 
 [workspace.dependencies]
 soroban-sdk = "22.0.7"
-adapter-interface={path="./adapters/interface", package="adapter-interface"}
+wowmax-adapter-interface={path="./adapters/interface", package="wowmax-adapter-interface"}
 test-utils = { path = "./test-utils" }
 
 [profile.release]

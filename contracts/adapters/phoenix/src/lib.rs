@@ -14,7 +14,7 @@ use storage::{
     set_protocol_address,
     get_protocol_address,
 };
-use adapter_interface::{
+use wowmax_adapter_interface::{
     AdapterTrait, AdapterError
 };
 use protocol_interface::{

@@ -1,9 +1,9 @@
 [package]
-name = "soroswap-aggregator"
+name = "wowmax-stellar-router"
 version = { workspace = true }
 license = { workspace = true }
 edition = { workspace = true }
-description = "Soroswap-Aggregator is a DeFi smart contract designed for the Soroban platform, enabling optimized cross-DEX trading by aggregating liquidity sources. It offers users the best trade execution paths across multiple decentralized exchanges with minimal slippage and optimized gas costs"
+description = "WOWMAX Stellar Router — main DEX aggregator contract that dispatches swaps across protocol adapters (Soroswap, Phoenix, Aquarius, CometDEX)."
 homepage = { workspace = true }
 repository = { workspace = true }
 authors = ["coderipper <joaquin@paltalabs.io>, esteblock"]
@@ -16,7 +16,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 soroban-sdk = { workspace = true }
-adapter-interface = { workspace = true }
+wowmax-adapter-interface = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }

@@ -5,7 +5,7 @@ use soroban_sdk::{
     Address, 
     vec, Vec, BytesN, Symbol, token::TokenClient, U256, FromVal};
 use crate::test::{AquaAggregatorAdapterTest, };
-use adapter_interface::AdapterError;
+use wowmax_adapter_interface::AdapterError;
 use super::aqua_adapter_contract::AdapterError as AdapterErrorDeployer;
 use crate::test::aqua_setup::create_token_contract;
 

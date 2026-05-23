@@ -1,9 +1,9 @@
 [package]
-name = "soroswap-aggregator-deployer"
+name = "wowmax-stellar-deployer"
 version = { workspace = true }
 license = { workspace = true }
 edition = { workspace = true }
-description = "Soroswap-Aggregator-Deployer is a smart contract designed to deploy the aggregator smart contracts"
+description = "Deployer helper contract for WowmaxStellarRouter adapters."
 homepage = { workspace = true }
 repository = { workspace = true }
 authors = ["coderipper <joaquin@paltalabs.io>"]
@@ -16,7 +16,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 soroban-sdk = { workspace = true }
-adapter-interface = { workspace = true }
+wowmax-adapter-interface = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }

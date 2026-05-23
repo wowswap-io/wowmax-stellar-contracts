@@ -1,6 +1,6 @@
 use soroban_sdk::{vec, Address, Env, Vec};
 use crate::storage::get_protocol_address;
-use adapter_interface::AdapterError;
+use wowmax_adapter_interface::AdapterError;
 
 soroban_sdk::contractimport!(
     file = "./comet_contracts/comet_pool.wasm"

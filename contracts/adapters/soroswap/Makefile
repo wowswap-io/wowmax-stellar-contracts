@@ -7,8 +7,8 @@ test: build
 
 build:
 	cargo build --target wasm32-unknown-unknown --release
-	soroban contract optimize --wasm ../../target/wasm32-unknown-unknown/release/soroswap_adapter.wasm
-	@rm ../../target/wasm32-unknown-unknown/release/soroswap_adapter.wasm
+	soroban contract optimize --wasm ../../target/wasm32-unknown-unknown/release/wowmax_soroswap_adapter.wasm
+	@rm ../../target/wasm32-unknown-unknown/release/wowmax_soroswap_adapter.wasm
 
 fmt:
 	cargo fmt --all --check

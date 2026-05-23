@@ -1,6 +1,6 @@
 use soroban_sdk::String;
 use crate::test::SoroswapAggregatorAdapterTest;
-use adapter_interface::AdapterError;
+use wowmax_adapter_interface::AdapterError;
 use super::soroswap_adapter_contract::AdapterError as AdapterErrorDeployer;
 
 #[test]

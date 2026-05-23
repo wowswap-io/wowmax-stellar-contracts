@@ -2,7 +2,7 @@ extern crate std;
 
 use soroban_sdk::{Address, vec, Vec};
 use crate::test::CometAggregatorAdapterTest;
-use adapter_interface::AdapterError;
+use wowmax_adapter_interface::AdapterError;
 
 #[test]
 fn swap_exact_tokens_for_tokens_not_initialized() {
