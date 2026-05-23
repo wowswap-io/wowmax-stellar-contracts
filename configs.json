@@ -1,0 +1,19 @@
+{
+  "protocolVersion": "22",
+  "soroban_sdk_version": "22.0.7",
+  "networkConfig": [
+    {
+      "network": "mainnet",
+      "horizon_rpc_url": "https://horizon.stellar.org",
+      "soroban_rpc_url": "${STELLAR_MAINNET_SOROBAN_RPC}",
+      "soroban_network_passphrase": "Public Global Stellar Network ; September 2015"
+    },
+    {
+      "network": "testnet",
+      "horizon_rpc_url": "https://horizon-testnet.stellar.org",
+      "friendbot_url": "https://friendbot.stellar.org/",
+      "soroban_rpc_url": "https://soroban-testnet.stellar.org/",
+      "soroban_network_passphrase": "Test SDF Network ; September 2015"
+    }
+  ]
+}

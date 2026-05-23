@@ -1,0 +1,17 @@
+wowmax-stellar-contracts
+========================
+
+This software is a derivative work of soroswap/aggregator
+(https://github.com/soroswap/aggregator), licensed under GPL-3.0.
+
+Original copyright holders of soroswap/aggregator retain their rights
+to the original code. Modifications made by WOWMAX are also released
+under GPL-3.0, in accordance with the requirements of the original license.
+
+Substantial modifications by WOWMAX:
+- Renamed contract from SoroswapAggregator to WowmaxStellarRouter.
+- Added fee mechanism: protocol fee collection on output token, sent to
+  configurable treasury address.
+- Adapted events, error types, and metadata for WOWMAX branding.
+
+For the full text of the GNU General Public License v3.0, see LICENSE.
