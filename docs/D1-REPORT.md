@@ -111,7 +111,7 @@ This deliverable spans two repositories:
 
 | Repository | Visibility | Contents |
 |---|---|---|
-| `wowmax-stellar-contracts` (this repo) | **Public** | Soroban router contract (Soroswap aggregator fork), GPL-3.0 |
+| `wowmax-stellar-contracts` (this repo) | **Public** | Soroban router contract (Soroswap aggregator fork), GPL-3.0-only |
 | `wowmax-stellar-router` | **Private** | TypeScript off-chain pathfinder (VFalgo port) |
 
 The off-chain pathfinder is kept private because the value-function

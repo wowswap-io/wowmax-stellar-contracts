@@ -118,13 +118,25 @@ copy-trading platform. As of mid-2026:
 
 ## License
 
-GPL-3.0. See [LICENSE](./LICENSE).
+[GPL-3.0-only](https://spdx.org/licenses/GPL-3.0-only.html). See
+[LICENSE](./LICENSE).
+
+This repository is a derivative work of an Apache-2.0 project; the
+original Apache-2.0 license text is preserved as
+[LICENSE.Apache-2.0](./LICENSE.Apache-2.0) per Apache-2.0 attribution
+requirements. See [NOTICE](./NOTICE) for the full attribution and
+relicensing rationale.
 
 ## Attribution
 
 This project is a derivative work of
-[soroswap/aggregator](https://github.com/soroswap/aggregator), licensed
-under GPL-3.0. See [NOTICE](./NOTICE) for details. Significant modifications
-were made to fit the WOWMAX routing model; the value-function algorithm
-itself originates from WOWMAX's EVM aggregator and is not inherited from
-the Soroswap codebase.
+[soroswap/aggregator](https://github.com/soroswap/aggregator), originally
+licensed under the Apache License, Version 2.0. The combined work
+(original code plus WOWMAX modifications) is distributed under
+GPL-3.0-only, as permitted by Apache-2.0's GPL-compatibility. See
+[NOTICE](./NOTICE) for the full attribution and the preserved upstream
+Apache-2.0 license text in
+[LICENSE.Apache-2.0](./LICENSE.Apache-2.0).
+
+The off-chain value-function pathfinder originates from WOWMAX's EVM
+aggregator and is not inherited from the Soroswap codebase.

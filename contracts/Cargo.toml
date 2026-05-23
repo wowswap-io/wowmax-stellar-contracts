@@ -5,7 +5,7 @@ resolver = "2"
 [workspace.package]
 version = "2.0.0"
 edition = "2021"
-license = "GPL-3.0"
+license = "GPL-3.0-only"
 repository = "https://github.com/wowswap-io/wowmax-stellar-contracts"
 homepage = "https://github.com/wowswap-io/wowmax-stellar-contracts"
 

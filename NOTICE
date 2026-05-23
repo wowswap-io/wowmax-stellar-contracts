@@ -1,17 +1,55 @@
 wowmax-stellar-contracts
 ========================
 
+Copyright (C) 2026 WOWMAX
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, version 3.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+Upstream attribution
+--------------------
+
 This software is a derivative work of soroswap/aggregator
-(https://github.com/soroswap/aggregator), licensed under GPL-3.0.
+(https://github.com/soroswap/aggregator), originally licensed under the
+Apache License, Version 2.0.
 
-Original copyright holders of soroswap/aggregator retain their rights
-to the original code. Modifications made by WOWMAX are also released
-under GPL-3.0, in accordance with the requirements of the original license.
+In accordance with the Apache License v2.0 terms (Section 4), the
+original Apache-2.0 license text is preserved in this repository as
+LICENSE.Apache-2.0. Original copyright holders of soroswap/aggregator
+retain their rights to the original code.
 
-Substantial modifications by WOWMAX:
-- Renamed contract from SoroswapAggregator to WowmaxStellarRouter.
-- Added fee mechanism: protocol fee collection on output token, sent to
-  configurable treasury address.
-- Adapted events, error types, and metadata for WOWMAX branding.
+The combined work of original code plus WOWMAX modifications is
+distributed under the GNU General Public License v3.0 (GPL-3.0-only),
+as permitted by the Apache-2.0 license (which is GPL-3.0-compatible
+per the Apache Software Foundation's compatibility analysis and the
+Free Software Foundation's classification).
 
-For the full text of the GNU General Public License v3.0, see LICENSE.
+
+WOWMAX modifications
+--------------------
+
+Substantial modifications by WOWMAX (in progress under the SCF Build
+deliverables D1-D10):
+
+- D1 (complete): off-chain routing pathfinder (separate private repo)
+  + D1 deliverable documentation under docs/.
+- D2 onward: Soroban router contract integration, atomic split and
+  multi-hop execution, Classic SDEX path-payment execution, frontend
+  integration, fee mechanism, analytics. See docs/D1-REPORT.md section
+  "What comes next" for the roadmap.
+
+Already applied:
+- Renamed crate from soroswap-aggregator to wowmax-stellar-router.
+- Renamed Rust struct from SoroswapAggregator to WowmaxStellarRouter.
+- Updated branding (NOTICE, README, project metadata).
+- D1 deliverable docs and benchmark evidence added under docs/.
