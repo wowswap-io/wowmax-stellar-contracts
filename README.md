@@ -11,6 +11,11 @@ Award](https://communityfund.stellar.org/), Integration Track.
 [`docs/d1-evidence/`](./docs/d1-evidence/) for live-mainnet benchmark
 artifacts.
 
+**Live D1 endpoint:** [`https://stellar-router.wowmax.exchange`](https://stellar-router.wowmax.exchange)
+— public read-only API. Every request fetches fresh Stellar mainnet
+reserves and returns the WOWMAX optimal route alongside single-pool
+baselines for direct comparison. Try it:
+curl 'https://stellar-router.wowmax.exchange/quote?from=XLM&to=USDC&amount=100'
 ---
 
 ## What this is
