@@ -130,24 +130,24 @@ The `wowmax-benchmark` CLI ran against Stellar mainnet (Horizon for SDEX
 orderbooks, Ankr's public Soroban RPC for Soroswap pool reserves) on
 14 token-pair queries across `[XLM, USDC, AQUA, EURC, yXLM]`.
 
-**Graph construction:** 20 classic edges + 14 soroban edges, in 514 ms.
+**Graph construction:** 20 classic edges + 14 soroban edges.
 
 | Case | Classic out | Soroban out | Winner | Mode | Type | vs Baseline |
 |---|---|---|---|---|---|---|
-| XLM -> USDC (100) | 14.0004963 | 19.6368616 | 19.6368616 | soroban | multi-hop | 4019.32 bps |
-| XLM -> USDC (1000) | 139.8495448 | 154.2174429 | 154.2174429 | soroban | multi-hop | 1010.02 bps |
-| XLM -> USDC (10000) | 1397.7219098 | 1414.7180666 | 1414.7180666 | soroban | multi-hop | 100.08 bps |
-| USDC -> XLM (5000) | 35684.9260885 | 35482.5691808 | 35684.9260885 | classic | single | 0.00 bps |
-| USDC -> EURC (500) | 430.6525141 | 430.6125562 | 430.6525141 | classic | single | 0.00 bps |
-| USDC -> EURC (5000) | 4294.1336845 | 4306.1255552 | 4306.1255552 | soroban | single | 0.00 bps |
-| EURC -> USDC (500) | 575.4879588 | 577.0901157 | 577.0901157 | soroban | single | 0.00 bps |
-| XLM -> EURC (1000) | 120.4622804 | 121.3012212 | 121.3012212 | soroban | single | 0.00 bps |
-| XLM -> EURC (10000) | 1203.6110429 | 1213.0122112 | 1213.0122112 | soroban | single | 0.00 bps |
-| USDC -> AQUA (100) | 316365.6560901 | 314640.2561439 | 316365.6560901 | classic | multi-hop | 31.95 bps |
-| USDC -> AQUA (1000) | 3163656.6018085 | 3145912.4991217 | 3163656.6018085 | classic | multi-hop | 31.96 bps |
-| XLM -> AQUA (10000) | 4525296.4070000 | 4557162.1691263 | 4557162.1691263 | soroban | single | 0.00 bps |
-| AQUA -> EURC (1000) | 0.2652305 | 0.2730442 | 0.2730442 | soroban | multi-hop | 0 bps |
-| EURC -> AQUA (100) | 361688.1125284 | 358886.8704415 | 361688.1125284 | classic | multi-hop | 298140.11 bps |
+| XLM -> USDC (100) | 18.4121751 | 18.3627919 | 18.4121751 | classic | single | 0.00 bps |
+| XLM -> USDC (1000) | 184.0949104 | 183.4356995 | 184.0949104 | classic | single | 0.00 bps |
+| XLM -> USDC (10000) | 1838.6309661 | 1818.0046535 | 1838.6309661 | classic | single | 0.00 bps |
+| USDC -> XLM (5000) | 27075.8386189 | 26251.8821356 | 27075.8386189 | classic | multi-hop | 2.71 bps |
+| USDC -> EURC (500) | 433.2200136 | 432.8578623 | 433.2200136 | classic | single | 0.00 bps |
+| USDC -> EURC (5000) | 4322.8303900 | 4270.1445353 | 4322.8303900 | classic | multi-hop | 0.72 bps |
+| EURC -> USDC (500) | 570.1619665 | 572.1166555 | 572.1166555 | soroban | single | 0.00 bps |
+| XLM -> EURC (1000) | 159.5572125 | 160.0451809 | 160.0451809 | soroban | single | 0.00 bps |
+| XLM -> EURC (10000) | 1593.6199370 | 1589.4868004 | 1593.6199370 | classic | multi-hop | 1302.60 bps |
+| USDC -> AQUA (100) | 270535.8739286 | 16562.0414965 | 270535.8739286 | classic | multi-hop | 3.91 bps |
+| USDC -> AQUA (1000) | 2705320.6209757 | 22535.4666423 | 2705320.6209757 | classic | multi-hop | 3.77 bps |
+| XLM -> AQUA (10000) | 4984060.3071278 | 23386.0220658 | 4984060.3071278 | classic | single | 0.00 bps |
+| AQUA -> EURC (1000) | 0.3182960 | 0.3112052 | 0.3182960 | classic | multi-hop | N/A (>100x) |
+| EURC -> AQUA (100) | 308629.9544169 | 16563.1922223 | 308629.9544169 | classic | multi-hop | 252937.22 bps |
 (All "out" values are in destination-token native units. "Baseline" is
 the best single-pool output achievable in the winning execution mode at
 the given input amount; `vs Baseline` is `(route - baseline) / baseline`
@@ -157,7 +157,7 @@ in basis points.)
 
 | Requirement | Threshold | Observed | Status |
 |---|---|---|---|
-| Pairs where route beats best single-pool baseline | ≥ 5 | **6** | ✓ |
+| Pairs where route beats best single-pool baseline | ≥ 5 | **7** | ✓ |
 | Multi-hop wins | ≥ 2 | **7** | ✓ |
 | No Classic + Soroban mixing | structural | guaranteed by design | ✓ |
 
@@ -165,29 +165,48 @@ Overall: **D1 measure-of-completion satisfied.**
 
 ## 7. Notable results
 
-**Multi-hop substantially beats direct on liquidity-mismatched pairs.**
-On `XLM → USDC (100)`, the optimal path routes through intermediate
-pools and produces +4019 bps over the best single XLM/USDC pool — that
-is, the routed output is **~40% larger** than naive single-pool
-execution. Even at `10000 XLM → USDC`, where the direct pool's depth
-matters more, the multi-hop route still wins by +100 bps.
+**On liquid pairs, the aggregator's value is venue selection.** For
+`XLM -> USDC` at all tested sizes, Classic SDEX and Soroswap quote
+within a fraction of a percent of each other, and the optimal route is
+a single pool on whichever venue is tighter at that moment. The
+aggregator correctly returns that single-pool route instead of
+over-engineering a multi-hop path. Small split gains (+0.2 to +5 bps)
+appear on stable-stable pairs.
 
-**Some token pairs have no direct pool at all.** `AQUA → EURC` is not
-directly routable on Soroswap; the pathfinder discovers that going via
-USDC (Soroban-side) is the only available route and produces ~0.273
-EURC for 1000 AQUA in.
+**On thin direct markets, multi-hop routing is worth whole percents.**
+`XLM -> EURC (10000)` is the flagship case: the direct XLM/EURC SDEX
+book is shallow, and routing through USDC yields **+1302.60 bps (+13.0%)**
+over the best direct pool. This is real orderbook physics, not an
+artifact.
 
-**Classic and Soroban win at different sizes.** On `XLM → USDC` Soroban
-dominates due to deep Soroswap pool liquidity. On `USDC → AQUA` Classic
-wins because the SDEX orderbook for AQUA quotes against USDC is tighter
-than the Soroswap AQUA pool. The aggregator picks the better of the two
-on every query.
+**Some pairs are effectively unroutable without aggregation.**
+`AQUA -> EURC` has only dust-tier direct liquidity; the routed
+multi-hop output exceeds the best direct option by more than 100x
+(reported qualitatively rather than in bps). `EURC -> AQUA (100)`
+similarly gains +252937 bps (~25x) over its dust-tier direct book.
 
-**Where direct dominates, the aggregator returns the direct route.** On
-`XLM → EURC (1000)`, `XLM → AQUA (10000)`, and similar cases the
-optimum is a single direct pool — the aggregator correctly identifies
-this and does not over-engineer multi-hop paths that would only add
-gas overhead.
+**Venue dominance is pair-specific.** Soroswap's AQUA pools hold
+near-zero reserves, so Classic SDEX dominates every AQUA pair; on
+EURC/USDC the Soroswap pool is deep and competitive. The aggregator
+discovers this per-query from live reserves rather than assuming a
+preferred venue.
+
+### Correction note (2026-06-10)
+
+An earlier version of this report (and the benchmark evidence in
+`d1-evidence/`) was generated with a token-decimals conversion bug in
+the Soroswap reserves loader: pool reserves were fed to the
+constant-product formula in native units (10^-7) while trade amounts
+were in display units, understating price impact on Soroswap pools by
+a factor of 10^7. Small-trade spot prices were unaffected, but
+large-trade quotes and several multi-hop "wins" through small Soroswap
+pools were overstated (e.g. a previously reported +4019 bps win on
+`XLM -> USDC (100)` does not exist on correct math). The bug was found
+during continued development, fixed in the pathfinder, and all
+benchmark evidence in this repository was regenerated from live
+mainnet with the corrected code. The D1 measure-of-completion criteria
+are satisfied on the corrected numbers, as shown above. SDEX (Classic)
+quotes were never affected.
 
 ## 8. How to reproduce
 

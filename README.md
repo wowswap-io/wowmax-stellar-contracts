@@ -93,11 +93,12 @@ atomically on-chain.
 - [benchmark-output.txt](./docs/d1-evidence/benchmark-output.txt) --
   human-readable CLI output
 
-**Headline result:** 14 token-pair test queries against mainnet, 6 beat
+**Headline result:** 14 token-pair test queries against mainnet, 7 beat
 single-pool baseline (D1 threshold: >= 5), 7 multi-hop wins (D1 threshold:
 >= 2), zero routes mix Classic and Soroban execution modes (enforced
-structurally). Best case `XLM -> USDC (100)` at +4019 bps via multi-hop.
-Full table in the D1 report.
+structurally). Flagship case: `XLM -> EURC (10000)` at **+1302.60 bps
+(+13.0%)** via multi-hop through USDC. Full table and a correction note
+on regenerated evidence in the D1 report.
 
 ## Building
 Produces optimized WASM artifacts in
