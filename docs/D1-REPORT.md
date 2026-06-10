@@ -178,7 +178,11 @@ appear where both venues hold deep books.
 direct-book option on either venue, and `AQUA -> EURC (1000)` exceeds
 its best direct option by more than 100x (reported qualitatively
 rather than in bps). On these pairs aggregation is not an optimization
-but the only practical way to trade.
+but the only practical way to trade. (Dust-tier books are occasionally
+refilled by market makers; the live endpoint reflects the current book,
+so these multipliers vary over time — a freshly refilled top-of-book can
+compress the gap to low single-digit multiples until consumed again.
+The table above is a dated snapshot.)
 
 **Against the cross-venue baseline, thin-but-tradable pairs win small
 even when the route is multi-hop.** `XLM -> EURC (10000)` routes multi-hop and beats it by +46.71 bps — the deep Soroswap
