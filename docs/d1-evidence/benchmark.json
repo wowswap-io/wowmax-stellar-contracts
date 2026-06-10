@@ -6,19 +6,19 @@
       "dst": "USDC",
       "amount": "100",
       "classic": {
-        "output": "18.8087100",
+        "output": "18.2975000",
         "hops": 1,
         "pools": 1,
         "isMultiHop": false
       },
       "soroban": {
-        "output": "18.8024876",
-        "hops": 2,
-        "pools": 3,
-        "isMultiHop": true
+        "output": "18.2116822",
+        "hops": 1,
+        "pools": 1,
+        "isMultiHop": false
       },
       "bestSinglePool": "sdex:sdex:native-",
-      "winnerOutput": "18.8087100",
+      "winnerOutput": "18.2975000",
       "winnerMode": "classic",
       "winnerRouteType": "single",
       "improvedOverBaseline": false,
@@ -30,19 +30,19 @@
       "dst": "USDC",
       "amount": "1000",
       "classic": {
-        "output": "188.0871000",
+        "output": "182.9750000",
         "hops": 1,
         "pools": 1,
         "isMultiHop": false
       },
       "soroban": {
-        "output": "187.8421077",
+        "output": "181.6939579",
         "hops": 2,
         "pools": 3,
         "isMultiHop": true
       },
       "bestSinglePool": "sdex:sdex:native-",
-      "winnerOutput": "188.0871000",
+      "winnerOutput": "182.9750000",
       "winnerMode": "classic",
       "winnerRouteType": "single",
       "improvedOverBaseline": false,
@@ -54,19 +54,19 @@
       "dst": "USDC",
       "amount": "10000",
       "classic": {
-        "output": "1880.8710000",
+        "output": "1829.7500000",
         "hops": 1,
         "pools": 1,
         "isMultiHop": false
       },
       "soroban": {
-        "output": "1861.4639386",
+        "output": "1799.8806953",
         "hops": 2,
         "pools": 3,
         "isMultiHop": true
       },
       "bestSinglePool": "sdex:sdex:native-",
-      "winnerOutput": "1880.8710000",
+      "winnerOutput": "1829.7500000",
       "winnerMode": "classic",
       "winnerRouteType": "single",
       "improvedOverBaseline": false,
@@ -78,19 +78,19 @@
       "dst": "XLM",
       "amount": "5000",
       "classic": {
-        "output": "26541.4476919",
+        "output": "27297.5522948",
         "hops": 1,
         "pools": 1,
         "isMultiHop": false
       },
       "soroban": {
-        "output": "25640.4413315",
+        "output": "26514.8357090",
         "hops": 2,
         "pools": 3,
         "isMultiHop": true
       },
       "bestSinglePool": "sdex:sdex:USDC:GA",
-      "winnerOutput": "26541.4476919",
+      "winnerOutput": "27297.5522948",
       "winnerMode": "classic",
       "winnerRouteType": "single",
       "improvedOverBaseline": false,
@@ -102,23 +102,23 @@
       "dst": "EURC",
       "amount": "500",
       "classic": {
-        "output": "432.2856323",
+        "output": "432.9692188",
         "hops": 2,
         "pools": 3,
         "isMultiHop": true
       },
       "soroban": {
-        "output": "432.5548964",
+        "output": "433.3122138",
         "hops": 2,
         "pools": 3,
         "isMultiHop": true
       },
       "bestSinglePool": "soroswap:CC7CDFY2VGDO",
-      "winnerOutput": "432.5548964",
+      "winnerOutput": "433.3122138",
       "winnerMode": "soroban",
       "winnerRouteType": "multi-hop",
       "improvedOverBaseline": true,
-      "improvementBps": "2.10"
+      "improvementBps": "0.01"
     },
     {
       "caseName": "USDC -> EURC (5000)",
@@ -126,23 +126,23 @@
       "dst": "EURC",
       "amount": "5000",
       "classic": {
-        "output": "4315.3347567",
+        "output": "4319.5181412",
         "hops": 2,
         "pools": 3,
         "isMultiHop": true
       },
       "soroban": {
-        "output": "4267.3038653",
+        "output": "4273.7312852",
         "hops": 2,
         "pools": 3,
         "isMultiHop": true
       },
       "bestSinglePool": "sdex:sdex:USDC:GA",
-      "winnerOutput": "4315.3347567",
+      "winnerOutput": "4319.5181412",
       "winnerMode": "classic",
       "winnerRouteType": "multi-hop",
       "improvedOverBaseline": true,
-      "improvementBps": "0.88"
+      "improvementBps": "2.04"
     },
     {
       "caseName": "EURC -> USDC (500)",
@@ -150,20 +150,20 @@
       "dst": "USDC",
       "amount": "500",
       "classic": {
-        "output": "570.0604264",
+        "output": "572.1580273",
         "hops": 1,
         "pools": 1,
         "isMultiHop": false
       },
       "soroban": {
-        "output": "572.4282522",
-        "hops": 1,
-        "pools": 1,
-        "isMultiHop": false
+        "output": "571.3291564",
+        "hops": 2,
+        "pools": 3,
+        "isMultiHop": true
       },
-      "bestSinglePool": "soroswap:CC7CDFY2VGDO",
-      "winnerOutput": "572.4282522",
-      "winnerMode": "soroban",
+      "bestSinglePool": "sdex:sdex:EURC:GD",
+      "winnerOutput": "572.1580273",
+      "winnerMode": "classic",
       "winnerRouteType": "single",
       "improvedOverBaseline": false,
       "improvementBps": "0.00"
@@ -174,20 +174,20 @@
       "dst": "EURC",
       "amount": "1000",
       "classic": {
-        "output": "162.7469754",
-        "hops": 2,
-        "pools": 3,
-        "isMultiHop": true
-      },
-      "soroban": {
-        "output": "163.7486326",
+        "output": "158.5969729",
         "hops": 1,
         "pools": 1,
         "isMultiHop": false
       },
-      "bestSinglePool": "soroswap:CATUJXDUO7SS",
-      "winnerOutput": "163.7486326",
-      "winnerMode": "soroban",
+      "soroban": {
+        "output": "158.4451278",
+        "hops": 1,
+        "pools": 1,
+        "isMultiHop": false
+      },
+      "bestSinglePool": "sdex:sdex:native-",
+      "winnerOutput": "158.5969729",
+      "winnerMode": "classic",
       "winnerRouteType": "single",
       "improvedOverBaseline": false,
       "improvementBps": "0.00"
@@ -198,23 +198,23 @@
       "dst": "EURC",
       "amount": "10000",
       "classic": {
-        "output": "1625.6048071",
+        "output": "1584.0862728",
         "hops": 2,
         "pools": 3,
         "isMultiHop": true
       },
       "soroban": {
-        "output": "1626.3448982",
+        "output": "1574.4715154",
         "hops": 2,
         "pools": 3,
         "isMultiHop": true
       },
       "bestSinglePool": "soroswap:CATUJXDUO7SS",
-      "winnerOutput": "1626.3448982",
-      "winnerMode": "soroban",
+      "winnerOutput": "1584.0862728",
+      "winnerMode": "classic",
       "winnerRouteType": "multi-hop",
       "improvedOverBaseline": true,
-      "improvementBps": "6.55"
+      "improvementBps": "71.55"
     },
     {
       "caseName": "USDC -> AQUA (100)",
@@ -222,23 +222,23 @@
       "dst": "AQUA",
       "amount": "100",
       "classic": {
-        "output": "267466.1876905",
+        "output": "272383.6309144",
         "hops": 2,
         "pools": 2,
         "isMultiHop": true
       },
       "soroban": {
-        "output": "21557.2167017",
+        "output": "21610.3221887",
         "hops": 2,
         "pools": 3,
         "isMultiHop": true
       },
       "bestSinglePool": "sdex:sdex:USDC:GA",
-      "winnerOutput": "267466.1876905",
+      "winnerOutput": "272383.6309144",
       "winnerMode": "classic",
       "winnerRouteType": "multi-hop",
       "improvedOverBaseline": true,
-      "improvementBps": "55.63"
+      "improvementBps": "39.94"
     },
     {
       "caseName": "USDC -> AQUA (1000)",
@@ -246,23 +246,23 @@
       "dst": "AQUA",
       "amount": "1000",
       "classic": {
-        "output": "2664361.3395424",
+        "output": "2719944.7270570",
         "hops": 2,
-        "pools": 3,
+        "pools": 2,
         "isMultiHop": true
       },
       "soroban": {
-        "output": "23291.3754035",
+        "output": "23297.6004649",
         "hops": 2,
         "pools": 3,
         "isMultiHop": true
       },
       "bestSinglePool": "sdex:sdex:USDC:GA",
-      "winnerOutput": "2664361.3395424",
+      "winnerOutput": "2719944.7270570",
       "winnerMode": "classic",
       "winnerRouteType": "multi-hop",
       "improvedOverBaseline": true,
-      "improvementBps": "16.90"
+      "improvementBps": "151.48"
     },
     {
       "caseName": "XLM -> AQUA (10000)",
@@ -270,23 +270,23 @@
       "dst": "AQUA",
       "amount": "10000",
       "classic": {
-        "output": "5009272.3309870",
-        "hops": 2,
-        "pools": 3,
-        "isMultiHop": true
+        "output": "4980873.5587331",
+        "hops": 1,
+        "pools": 1,
+        "isMultiHop": false
       },
       "soroban": {
-        "output": "23392.9650367",
+        "output": "23392.7648169",
         "hops": 2,
         "pools": 3,
         "isMultiHop": true
       },
       "bestSinglePool": "sdex:sdex:native-",
-      "winnerOutput": "5009272.3309870",
+      "winnerOutput": "4980873.5587331",
       "winnerMode": "classic",
-      "winnerRouteType": "multi-hop",
-      "improvedOverBaseline": true,
-      "improvementBps": "3.90"
+      "winnerRouteType": "single",
+      "improvedOverBaseline": false,
+      "improvementBps": "0.00"
     },
     {
       "caseName": "AQUA -> EURC (1000)",
@@ -294,19 +294,19 @@
       "dst": "EURC",
       "amount": "1000",
       "classic": {
-        "output": "0.3219780",
+        "output": "0.3147217",
         "hops": 2,
         "pools": 2,
         "isMultiHop": true
       },
       "soroban": {
-        "output": "0.3173090",
+        "output": "0.3081357",
         "hops": 3,
         "pools": 4,
         "isMultiHop": true
       },
       "bestSinglePool": "sdex:sdex:AQUA:GB",
-      "winnerOutput": "0.3219780",
+      "winnerOutput": "0.3147217",
       "winnerMode": "classic",
       "winnerRouteType": "multi-hop",
       "improvedOverBaseline": true,
@@ -318,29 +318,29 @@
       "dst": "AQUA",
       "amount": "100",
       "classic": {
-        "output": "303256.7728309",
+        "output": "311193.7667497",
         "hops": 2,
         "pools": 2,
         "isMultiHop": true
       },
       "soroban": {
-        "output": "21790.9785244",
+        "output": "21839.5743328",
         "hops": 3,
         "pools": 4,
         "isMultiHop": true
       },
       "bestSinglePool": "sdex:sdex:EURC:GD",
-      "winnerOutput": "303256.7728309",
+      "winnerOutput": "311193.7667497",
       "winnerMode": "classic",
       "winnerRouteType": "multi-hop",
       "improvedOverBaseline": true,
-      "improvementBps": "248359.54"
+      "improvementBps": "255121.46"
     }
   ],
   "summary": {
     "totalCases": 14,
-    "beatsSinglePoolBaseline": 8,
-    "multiHopWins": 8,
+    "beatsSinglePoolBaseline": 7,
+    "multiHopWins": 7,
     "requirementsMet": {
       "≥ 5 pairs beat baseline": true,
       "≥ 2 multi-hop wins": true,

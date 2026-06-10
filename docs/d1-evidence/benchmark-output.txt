@@ -3,22 +3,22 @@ Graph: 20 classic edges, 14 soroban edges
 
 Case                          Classic out      Soroban out       Winner out Mode     Type          vs Baseline
 --------------------------------------------------------------------------------------------------------------
-XLM -> USDC (100)              18.8087100       18.8024876       18.8087100 classic  single            0.00bps
-XLM -> USDC (1000)            188.0871000      187.8421077      188.0871000 classic  single            0.00bps
-XLM -> USDC (10000)          1880.8710000     1861.4639386     1880.8710000 classic  single            0.00bps
-USDC -> XLM (5000)          26541.4476919    25640.4413315    26541.4476919 classic  single            0.00bps
-USDC -> EURC (500)            432.2856323      432.5548964      432.5548964 soroban  multi-hop        +2.10bps
-USDC -> EURC (5000)          4315.3347567     4267.3038653     4315.3347567 classic  multi-hop        +0.88bps
-EURC -> USDC (500)            570.0604264      572.4282522      572.4282522 soroban  single            0.00bps
-XLM -> EURC (1000)            162.7469754      163.7486326      163.7486326 soroban  single            0.00bps
-XLM -> EURC (10000)          1625.6048071     1626.3448982     1626.3448982 soroban  multi-hop        +6.55bps
-USDC -> AQUA (100)         267466.1876905    21557.2167017   267466.1876905 classic  multi-hop       +55.63bps
-USDC -> AQUA (1000)       2664361.3395424    23291.3754035  2664361.3395424 classic  multi-hop       +16.90bps
-XLM -> AQUA (10000)       5009272.3309870    23392.9650367  5009272.3309870 classic  multi-hop        +3.90bps
-AQUA -> EURC (1000)             0.3219780        0.3173090        0.3219780 classic  multi-hop     N/A (>100x)
-EURC -> AQUA (100)         303256.7728309    21790.9785244   303256.7728309 classic  multi-hop   +248359.54bps
+XLM -> USDC (100)              18.2975000       18.2116822       18.2975000 classic  single            0.00bps
+XLM -> USDC (1000)            182.9750000      181.6939579      182.9750000 classic  single            0.00bps
+XLM -> USDC (10000)          1829.7500000     1799.8806953     1829.7500000 classic  single            0.00bps
+USDC -> XLM (5000)          27297.5522948    26514.8357090    27297.5522948 classic  single            0.00bps
+USDC -> EURC (500)            432.9692188      433.3122138      433.3122138 soroban  multi-hop        +0.01bps
+USDC -> EURC (5000)          4319.5181412     4273.7312852     4319.5181412 classic  multi-hop        +2.04bps
+EURC -> USDC (500)            572.1580273      571.3291564      572.1580273 classic  single            0.00bps
+XLM -> EURC (1000)            158.5969729      158.4451278      158.5969729 classic  single            0.00bps
+XLM -> EURC (10000)          1584.0862728     1574.4715154     1584.0862728 classic  multi-hop       +71.55bps
+USDC -> AQUA (100)         272383.6309144    21610.3221887   272383.6309144 classic  multi-hop       +39.94bps
+USDC -> AQUA (1000)       2719944.7270570    23297.6004649  2719944.7270570 classic  multi-hop      +151.48bps
+XLM -> AQUA (10000)       4980873.5587331    23392.7648169  4980873.5587331 classic  single            0.00bps
+AQUA -> EURC (1000)             0.3147217        0.3081357        0.3147217 classic  multi-hop     N/A (>100x)
+EURC -> AQUA (100)         311193.7667497    21839.5743328   311193.7667497 classic  multi-hop   +255121.46bps
 
-Beats cross-venue single-pool baseline: 8 of 14 (threshold >= 5)
-Multi-hop wins: 8 of 14 (threshold >= 2)
+Beats cross-venue single-pool baseline: 7 of 14 (threshold >= 5)
+Multi-hop wins: 7 of 14 (threshold >= 2)
 No Classic+Soroban mixing: structural
 D1 MEASURE-OF-COMPLETION: SATISFIED

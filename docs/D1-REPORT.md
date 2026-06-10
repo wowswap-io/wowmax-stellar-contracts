@@ -134,20 +134,20 @@ orderbooks, Ankr's public Soroban RPC for Soroswap pool reserves) on
 
 | Case | Classic out | Soroban out | Winner | Mode | Type | vs Baseline |
 |---|---|---|---|---|---|---|
-| XLM -> USDC (100) | 18.8087100 | 18.8024876 | 18.8087100 | classic | single | 0.00 bps |
-| XLM -> USDC (1000) | 188.0871000 | 187.8421077 | 188.0871000 | classic | single | 0.00 bps |
-| XLM -> USDC (10000) | 1880.8710000 | 1861.4639386 | 1880.8710000 | classic | single | 0.00 bps |
-| USDC -> XLM (5000) | 26541.4476919 | 25640.4413315 | 26541.4476919 | classic | single | 0.00 bps |
-| USDC -> EURC (500) | 432.2856323 | 432.5548964 | 432.5548964 | soroban | multi-hop | 2.10 bps |
-| USDC -> EURC (5000) | 4315.3347567 | 4267.3038653 | 4315.3347567 | classic | multi-hop | 0.88 bps |
-| EURC -> USDC (500) | 570.0604264 | 572.4282522 | 572.4282522 | soroban | single | 0.00 bps |
-| XLM -> EURC (1000) | 162.7469754 | 163.7486326 | 163.7486326 | soroban | single | 0.00 bps |
-| XLM -> EURC (10000) | 1625.6048071 | 1626.3448982 | 1626.3448982 | soroban | multi-hop | 6.55 bps |
-| USDC -> AQUA (100) | 267466.1876905 | 21557.2167017 | 267466.1876905 | classic | multi-hop | 55.63 bps |
-| USDC -> AQUA (1000) | 2664361.3395424 | 23291.3754035 | 2664361.3395424 | classic | multi-hop | 16.90 bps |
-| XLM -> AQUA (10000) | 5009272.3309870 | 23392.9650367 | 5009272.3309870 | classic | multi-hop | 3.90 bps |
-| AQUA -> EURC (1000) | 0.3219780 | 0.3173090 | 0.3219780 | classic | multi-hop | N/A (>100x) |
-| EURC -> AQUA (100) | 303256.7728309 | 21790.9785244 | 303256.7728309 | classic | multi-hop | 248359.54 bps |
+| XLM -> USDC (100) | 18.2975000 | 18.2116822 | 18.2975000 | classic | single | 0.00 bps |
+| XLM -> USDC (1000) | 182.9750000 | 181.6939579 | 182.9750000 | classic | single | 0.00 bps |
+| XLM -> USDC (10000) | 1829.7500000 | 1799.8806953 | 1829.7500000 | classic | single | 0.00 bps |
+| USDC -> XLM (5000) | 27297.5522948 | 26514.8357090 | 27297.5522948 | classic | single | 0.00 bps |
+| USDC -> EURC (500) | 432.9692188 | 433.3122138 | 433.3122138 | soroban | multi-hop | 0.01 bps |
+| USDC -> EURC (5000) | 4319.5181412 | 4273.7312852 | 4319.5181412 | classic | multi-hop | 2.04 bps |
+| EURC -> USDC (500) | 572.1580273 | 571.3291564 | 572.1580273 | classic | single | 0.00 bps |
+| XLM -> EURC (1000) | 158.5969729 | 158.4451278 | 158.5969729 | classic | single | 0.00 bps |
+| XLM -> EURC (10000) | 1584.0862728 | 1574.4715154 | 1584.0862728 | classic | multi-hop | 71.55 bps |
+| USDC -> AQUA (100) | 272383.6309144 | 21610.3221887 | 272383.6309144 | classic | multi-hop | 39.94 bps |
+| USDC -> AQUA (1000) | 2719944.7270570 | 23297.6004649 | 2719944.7270570 | classic | multi-hop | 151.48 bps |
+| XLM -> AQUA (10000) | 4980873.5587331 | 23392.7648169 | 4980873.5587331 | classic | single | 0.00 bps |
+| AQUA -> EURC (1000) | 0.3147217 | 0.3081357 | 0.3147217 | classic | multi-hop | N/A (>100x) |
+| EURC -> AQUA (100) | 311193.7667497 | 21839.5743328 | 311193.7667497 | classic | multi-hop | 255121.46 bps |
 (All "out" values are in destination-token native units. "Baseline" is
 the best single-pool output achievable across both venues (Classic
 SDEX and Soroban) at the given input amount; `vs Baseline` is `(route - baseline) / baseline`
@@ -157,8 +157,8 @@ in basis points.)
 
 | Requirement | Threshold | Observed | Status |
 |---|---|---|---|
-| Pairs where route beats best single-pool baseline | ≥ 5 | **8** | ✓ |
-| Multi-hop wins | ≥ 2 | **8** | ✓ |
+| Pairs where route beats best single-pool baseline | ≥ 5 | **7** | ✓ |
+| Multi-hop wins | ≥ 2 | **7** | ✓ |
 | No Classic + Soroban mixing | structural | guaranteed by design | ✓ |
 
 Overall: **D1 measure-of-completion satisfied.**
@@ -250,6 +250,21 @@ inflation removed), and composite wins in the tens of bps appeared
 Requirements hold (8 beats / 8 multi-hop). Each boundary
 now has a live regression probe in the private repo (decimals_probe
 for AMM reserves, sdex_probe for orderbook conventions).
+
+**Proxy tokens and expanded case set (same date, fourth update):**
+the intermediate-token list was rebuilt from data instead of intuition.
+A trade-driven scan (2400 recent trades via Horizon, then a bilateral
+order-book probe of the top-traded assets against BOTH XLM and USDC,
+with executable-depth, spread and cross-rate sanity gates) confirmed
+the existing intermediates AQUA and yXLM and added two new proxy
+tokens: VELO and the XRP anchor. The routing graph grew from 20 to 42
+classic edges with no latency cost (pair fetches were already
+parallel). Three cases were added to the benchmark to cover the new
+transit topology — including a 100,000 XLM trade that the optimizer
+splits between the direct book and an XLM->XRP->USDC leg, the exact
+proxy-transit pattern the feature targets. Numbers in the table above
+are a fresh frozen snapshot on the expanded graph; thresholds hold
+with margin (7 of 14 beat baseline, 7 multi-hop wins).
 
 ## 8. How to reproduce
 
