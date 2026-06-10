@@ -134,20 +134,20 @@ orderbooks, Ankr's public Soroban RPC for Soroswap pool reserves) on
 
 | Case | Classic out | Soroban out | Winner | Mode | Type | vs Baseline |
 |---|---|---|---|---|---|---|
-| XLM -> USDC (100) | 18.4274400 | 18.3408949 | 18.4274400 | classic | single | 0.00 bps |
-| XLM -> USDC (1000) | 184.2587690 | 183.2303619 | 184.2587690 | classic | multi-hop | 0.06 bps |
-| XLM -> USDC (10000) | 1839.8431183 | 1816.0058517 | 1839.8431183 | classic | single | 0.00 bps |
-| USDC -> XLM (5000) | 27058.6768402 | 26280.3355153 | 27058.6768402 | classic | multi-hop | 0.11 bps |
-| USDC -> EURC (500) | 433.2200790 | 432.9895038 | 433.2200790 | classic | single | 0.00 bps |
-| USDC -> EURC (5000) | 4323.4327904 | 4271.4515688 | 4323.4327904 | classic | multi-hop | 0.73 bps |
-| EURC -> USDC (500) | 570.3674076 | 571.9165411 | 571.9165411 | soroban | single | 0.00 bps |
-| XLM -> EURC (1000) | 159.6594031 | 159.9103627 | 159.9103627 | soroban | single | 0.00 bps |
-| XLM -> EURC (10000) | 1594.7376580 | 1588.2003182 | 1594.7376580 | classic | multi-hop | 46.71 bps |
-| USDC -> AQUA (100) | 271138.9993490 | 16568.5473836 | 271138.9993490 | classic | single | 0.00 bps |
-| USDC -> AQUA (1000) | 2710332.6941990 | 22541.9728720 | 2710332.6941990 | classic | single | 0.00 bps |
-| XLM -> AQUA (10000) | 4991114.9362314 | 23392.5251471 | 4991114.9362314 | classic | multi-hop | 4.19 bps |
-| AQUA -> EURC (1000) | 0.3188310 | 0.3106251 | 0.3188310 | classic | multi-hop | N/A (>100x) |
-| EURC -> AQUA (100) | 309362.9726463 | 16569.6960818 | 309362.9726463 | classic | multi-hop | 253561.72 bps |
+| XLM -> USDC (100) | 18.8087100 | 18.8024876 | 18.8087100 | classic | single | 0.00 bps |
+| XLM -> USDC (1000) | 188.0871000 | 187.8421077 | 188.0871000 | classic | single | 0.00 bps |
+| XLM -> USDC (10000) | 1880.8710000 | 1861.4639386 | 1880.8710000 | classic | single | 0.00 bps |
+| USDC -> XLM (5000) | 26541.4476919 | 25640.4413315 | 26541.4476919 | classic | single | 0.00 bps |
+| USDC -> EURC (500) | 432.2856323 | 432.5548964 | 432.5548964 | soroban | multi-hop | 2.10 bps |
+| USDC -> EURC (5000) | 4315.3347567 | 4267.3038653 | 4315.3347567 | classic | multi-hop | 0.88 bps |
+| EURC -> USDC (500) | 570.0604264 | 572.4282522 | 572.4282522 | soroban | single | 0.00 bps |
+| XLM -> EURC (1000) | 162.7469754 | 163.7486326 | 163.7486326 | soroban | single | 0.00 bps |
+| XLM -> EURC (10000) | 1625.6048071 | 1626.3448982 | 1626.3448982 | soroban | multi-hop | 6.55 bps |
+| USDC -> AQUA (100) | 267466.1876905 | 21557.2167017 | 267466.1876905 | classic | multi-hop | 55.63 bps |
+| USDC -> AQUA (1000) | 2664361.3395424 | 23291.3754035 | 2664361.3395424 | classic | multi-hop | 16.90 bps |
+| XLM -> AQUA (10000) | 5009272.3309870 | 23392.9650367 | 5009272.3309870 | classic | multi-hop | 3.90 bps |
+| AQUA -> EURC (1000) | 0.3219780 | 0.3173090 | 0.3219780 | classic | multi-hop | N/A (>100x) |
+| EURC -> AQUA (100) | 303256.7728309 | 21790.9785244 | 303256.7728309 | classic | multi-hop | 248359.54 bps |
 (All "out" values are in destination-token native units. "Baseline" is
 the best single-pool output achievable across both venues (Classic
 SDEX and Soroban) at the given input amount; `vs Baseline` is `(route - baseline) / baseline`
@@ -157,8 +157,8 @@ in basis points.)
 
 | Requirement | Threshold | Observed | Status |
 |---|---|---|---|
-| Pairs where route beats best single-pool baseline | ≥ 5 | **7** | ✓ |
-| Multi-hop wins | ≥ 2 | **7** | ✓ |
+| Pairs where route beats best single-pool baseline | ≥ 5 | **8** | ✓ |
+| Multi-hop wins | ≥ 2 | **8** | ✓ |
 | No Classic + Soroban mixing | structural | guaranteed by design | ✓ |
 
 Overall: **D1 measure-of-completion satisfied.**
@@ -225,6 +225,31 @@ direct pool), and made the dust-tier direct-book pairs the flagship
 cases. Requirements remain satisfied under the stricter baseline. The
 human-readable evidence file is now rendered from benchmark.json so
 both evidence files always describe the same market snapshot.
+
+**Classic-side data and composite fixes (same date, third correction):**
+continued verification against raw Horizon books uncovered three more
+bugs in the (private) pathfinder's classic side, all fixed and the
+evidence regenerated once more. (1) Bid-amount convention: Horizon
+denominates order amounts in the asset the maker gives away, so
+bid.amount is the maker's counter budget (our output cap), not input
+capacity; the loader treated it as input, understating books with
+price < 1 (XLM/USDC appeared ~5.4x too shallow) and inflating books
+with price > 1 by roughly the price factor (a phantom near-zero-
+slippage XLM->AQUA path). Established empirically by a mirror test:
+the same physical order carries the same amount in both book
+orientations. (2) Orderbook depth: the loader fetched 50 levels;
+large trades walked off the visible book and the remainder was
+silently dropped. Now 200 (Horizon's cap). (3) Composite sampling:
+two-hop functions sampled their second leg over the query amount in
+the wrong units, wasting most of the grid and understating multi-hop
+routes; legs are now sampled over their reachable input range.
+Net effect on this table: direct quotes on liquid pairs are larger
+(real depth visible), the AQUA direct quotes are honest (phantom
+inflation removed), and composite wins in the tens of bps appeared
+(USDC -> AQUA (100) +55.6 bps; USDC -> AQUA (1000) +16.9 bps) that the previous code could not represent.
+Requirements hold (8 beats / 8 multi-hop). Each boundary
+now has a live regression probe in the private repo (decimals_probe
+for AMM reserves, sdex_probe for orderbook conventions).
 
 ## 8. How to reproduce
 
