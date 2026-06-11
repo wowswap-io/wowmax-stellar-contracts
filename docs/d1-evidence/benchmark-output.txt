@@ -1,24 +1,27 @@
 WOWMAX STELLAR ROUTER — D1 BENCHMARK (rendered from benchmark.json)
-Graph: 20 classic edges, 14 soroban edges
+Graph: 42 classic edges, 16 soroban edges
 
 Case                          Classic out      Soroban out       Winner out Mode     Type          vs Baseline
 --------------------------------------------------------------------------------------------------------------
-XLM -> USDC (100)              18.2975000       18.2116822       18.2975000 classic  single            0.00bps
-XLM -> USDC (1000)            182.9750000      181.6939579      182.9750000 classic  single            0.00bps
-XLM -> USDC (10000)          1829.7500000     1799.8806953     1829.7500000 classic  single            0.00bps
-USDC -> XLM (5000)          27297.5522948    26514.8357090    27297.5522948 classic  single            0.00bps
-USDC -> EURC (500)            432.9692188      433.3122138      433.3122138 soroban  multi-hop        +0.01bps
-USDC -> EURC (5000)          4319.5181412     4273.7312852     4319.5181412 classic  multi-hop        +2.04bps
+XLM -> USDC (100)              18.2351000       18.2116822       18.2351000 classic  single            0.00bps
+XLM -> USDC (1000)            182.3510000      181.6939579      182.3510000 classic  single            0.00bps
+XLM -> USDC (10000)          1823.4700000     1799.8806953     1823.4700000 classic  single            0.00bps
+USDC -> XLM (5000)          27351.9887595    26514.8357090    27351.9887595 classic  single            0.00bps
+USDC -> EURC (500)            432.7867785      433.3122138      433.3122138 soroban  multi-hop        +0.01bps
+USDC -> EURC (5000)          4318.7450496     4273.7312852     4318.7450496 classic  multi-hop        +1.21bps
 EURC -> USDC (500)            572.1580273      571.3291564      572.1580273 classic  single            0.00bps
-XLM -> EURC (1000)            158.5969729      158.4451278      158.5969729 classic  single            0.00bps
-XLM -> EURC (10000)          1584.0862728     1574.4715154     1584.0862728 classic  multi-hop       +71.55bps
-USDC -> AQUA (100)         272383.6309144    21610.3221887   272383.6309144 classic  multi-hop       +39.94bps
-USDC -> AQUA (1000)       2719944.7270570    23297.6004649  2719944.7270570 classic  multi-hop      +151.48bps
-XLM -> AQUA (10000)       4980873.5587331    23392.7648169  4980873.5587331 classic  single            0.00bps
-AQUA -> EURC (1000)             0.3147217        0.3081357        0.3147217 classic  multi-hop     N/A (>100x)
-EURC -> AQUA (100)         311193.7667497    21839.5743328   311193.7667497 classic  multi-hop   +255121.46bps
+XLM -> EURC (1000)            157.9866250      158.4451278      158.4451278 soroban  single            0.00bps
+XLM -> EURC (10000)          1578.2523061     1574.4715154     1578.2523061 classic  multi-hop       +34.46bps
+USDC -> AQUA (100)         273112.7331605    21610.3221887   273112.7331605 classic  multi-hop       +66.82bps
+USDC -> AQUA (1000)       2725649.0525698    23297.6004649  2725649.0525698 classic  multi-hop      +183.24bps
+XLM -> AQUA (10000)       4981066.8059135    23392.7648169  4981066.8059135 classic  single            0.00bps
+AQUA -> EURC (1000)             0.3136172        0.3081357        0.3136172 classic  multi-hop     N/A (>100x)
+EURC -> AQUA (100)         312403.3895938    21839.5743328   312403.3895938 classic  multi-hop   +256152.00bps
+XLM -> VELO (10000)        536358.7260922                —   536358.7260922 classic  multi-hop       +20.38bps
+XRP -> USDC (500)             547.2120657        0.0001662      547.2120657 classic  single            0.00bps
+XLM -> USDC (100000)        18191.4853280    16537.3407190    18191.4853280 classic  multi-hop        +0.42bps
 
-Beats cross-venue single-pool baseline: 7 of 14 (threshold >= 5)
-Multi-hop wins: 7 of 14 (threshold >= 2)
+Beats cross-venue single-pool baseline: 9 of 17 (threshold >= 5)
+Multi-hop wins: 9 of 17 (threshold >= 2)
 No Classic+Soroban mixing: structural
 D1 MEASURE-OF-COMPLETION: SATISFIED

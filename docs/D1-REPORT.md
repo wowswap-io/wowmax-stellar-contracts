@@ -134,20 +134,23 @@ orderbooks, Ankr's public Soroban RPC for Soroswap pool reserves) on
 
 | Case | Classic out | Soroban out | Winner | Mode | Type | vs Baseline |
 |---|---|---|---|---|---|---|
-| XLM -> USDC (100) | 18.2975000 | 18.2116822 | 18.2975000 | classic | single | 0.00 bps |
-| XLM -> USDC (1000) | 182.9750000 | 181.6939579 | 182.9750000 | classic | single | 0.00 bps |
-| XLM -> USDC (10000) | 1829.7500000 | 1799.8806953 | 1829.7500000 | classic | single | 0.00 bps |
-| USDC -> XLM (5000) | 27297.5522948 | 26514.8357090 | 27297.5522948 | classic | single | 0.00 bps |
-| USDC -> EURC (500) | 432.9692188 | 433.3122138 | 433.3122138 | soroban | multi-hop | 0.01 bps |
-| USDC -> EURC (5000) | 4319.5181412 | 4273.7312852 | 4319.5181412 | classic | multi-hop | 2.04 bps |
+| XLM -> USDC (100) | 18.2351000 | 18.2116822 | 18.2351000 | classic | single | 0.00 bps |
+| XLM -> USDC (1000) | 182.3510000 | 181.6939579 | 182.3510000 | classic | single | 0.00 bps |
+| XLM -> USDC (10000) | 1823.4700000 | 1799.8806953 | 1823.4700000 | classic | single | 0.00 bps |
+| USDC -> XLM (5000) | 27351.9887595 | 26514.8357090 | 27351.9887595 | classic | single | 0.00 bps |
+| USDC -> EURC (500) | 432.7867785 | 433.3122138 | 433.3122138 | soroban | multi-hop | 0.01 bps |
+| USDC -> EURC (5000) | 4318.7450496 | 4273.7312852 | 4318.7450496 | classic | multi-hop | 1.21 bps |
 | EURC -> USDC (500) | 572.1580273 | 571.3291564 | 572.1580273 | classic | single | 0.00 bps |
-| XLM -> EURC (1000) | 158.5969729 | 158.4451278 | 158.5969729 | classic | single | 0.00 bps |
-| XLM -> EURC (10000) | 1584.0862728 | 1574.4715154 | 1584.0862728 | classic | multi-hop | 71.55 bps |
-| USDC -> AQUA (100) | 272383.6309144 | 21610.3221887 | 272383.6309144 | classic | multi-hop | 39.94 bps |
-| USDC -> AQUA (1000) | 2719944.7270570 | 23297.6004649 | 2719944.7270570 | classic | multi-hop | 151.48 bps |
-| XLM -> AQUA (10000) | 4980873.5587331 | 23392.7648169 | 4980873.5587331 | classic | single | 0.00 bps |
-| AQUA -> EURC (1000) | 0.3147217 | 0.3081357 | 0.3147217 | classic | multi-hop | N/A (>100x) |
-| EURC -> AQUA (100) | 311193.7667497 | 21839.5743328 | 311193.7667497 | classic | multi-hop | 255121.46 bps |
+| XLM -> EURC (1000) | 157.9866250 | 158.4451278 | 158.4451278 | soroban | single | 0.00 bps |
+| XLM -> EURC (10000) | 1578.2523061 | 1574.4715154 | 1578.2523061 | classic | multi-hop | 34.46 bps |
+| USDC -> AQUA (100) | 273112.7331605 | 21610.3221887 | 273112.7331605 | classic | multi-hop | 66.82 bps |
+| USDC -> AQUA (1000) | 2725649.0525698 | 23297.6004649 | 2725649.0525698 | classic | multi-hop | 183.24 bps |
+| XLM -> AQUA (10000) | 4981066.8059135 | 23392.7648169 | 4981066.8059135 | classic | single | 0.00 bps |
+| AQUA -> EURC (1000) | 0.3136172 | 0.3081357 | 0.3136172 | classic | multi-hop | N/A (>100x) |
+| EURC -> AQUA (100) | 312403.3895938 | 21839.5743328 | 312403.3895938 | classic | multi-hop | 256152.00 bps |
+| XLM -> VELO (10000) | 536358.7260922 | — | 536358.7260922 | classic | multi-hop | 20.38 bps |
+| XRP -> USDC (500) | 547.2120657 | 0.0001662 | 547.2120657 | classic | single | 0.00 bps |
+| XLM -> USDC (100000) | 18191.4853280 | 16537.3407190 | 18191.4853280 | classic | multi-hop | 0.42 bps |
 (All "out" values are in destination-token native units. "Baseline" is
 the best single-pool output achievable across both venues (Classic
 SDEX and Soroban) at the given input amount; `vs Baseline` is `(route - baseline) / baseline`
@@ -157,8 +160,8 @@ in basis points.)
 
 | Requirement | Threshold | Observed | Status |
 |---|---|---|---|
-| Pairs where route beats best single-pool baseline | ≥ 5 | **7** | ✓ |
-| Multi-hop wins | ≥ 2 | **7** | ✓ |
+| Pairs where route beats best single-pool baseline | ≥ 5 | **9** | ✓ |
+| Multi-hop wins | ≥ 2 | **9** | ✓ |
 | No Classic + Soroban mixing | structural | guaranteed by design | ✓ |
 
 Overall: **D1 measure-of-completion satisfied.**
