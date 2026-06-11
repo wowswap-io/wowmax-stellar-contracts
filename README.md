@@ -6,10 +6,12 @@
 Part of the WOWMAX deliverable for the [Stellar Community Fund (SCF) Build
 Award](https://communityfund.stellar.org/), Integration Track.
 
-**Status:** D1 (path-finder algorithm) complete. See
+**Status:** D1 (path-finder algorithm) complete — see
 [`docs/D1-REPORT.md`](./docs/D1-REPORT.md) for the deliverable report and
 [`docs/d1-evidence/`](./docs/d1-evidence/) for live-mainnet benchmark
-artifacts.
+artifacts. D2 (Stellar wallet integration) and D3 (swap interface &
+route visualization) are in progress in the WOWMAX frontend; their
+reports will land in `docs/` as the tranches close.
 
 **Live D1 endpoint:** [`https://stellar-router.wowmax.exchange`](https://stellar-router.wowmax.exchange)
 — public read-only API. Every request fetches fresh Stellar mainnet
@@ -76,14 +78,26 @@ atomically on-chain.
 
 ## Deliverable roadmap
 
+SCF Build Award tranches (numbering follows the grant document):
+
 | Tranche | Scope | Status |
 |---|---|---|
-| **D1** | Routing path-finder algorithm | **complete** |
-| D2 | Soroban router contract: atomic split + multi-hop execution | in progress |
-| D3 | Classic SDEX path-payment execution | scheduled |
-| D4 | Liquidity-group dedup, deeper hop iteration | scheduled |
-| D5 | Frontend integration (app.wowmax.exchange) | scheduled |
-| D6+ | Fee mechanism, analytics, observability | scheduled |
+| **D1** | Routing path-finder algorithm | **complete** ([report](./docs/D1-REPORT.md)) |
+| **D2** | Stellar wallet integration — Stellar Wallets Kit (Freighter, xBull, Albedo, Lobstr, Hana), transaction signing, trustline detection with automatic ChangeTrust, fee estimation, network selection, account funding flows | in progress |
+| **D3** | Swap interface & route visualization in the WOWMAX UI — token selector, USD values, route visualization and route-type badge, gas estimation, price impact, confirmation flow, mobile-responsive, public Cloudflare Pages preview | in progress |
+
+Classic SDEX path-payment execution ships inside D2/D3: the router's
+`/swap` endpoint decomposes the winning route into
+`PathPaymentStrictSend` strands and the frontend signs and submits
+them atomically per strand.
+
+Engineering roadmap beyond the grant tranches (the on-chain half in
+this repository):
+
+- Soroban **router contract**: atomic split + multi-hop execution
+  on-chain, with the protocol adapters under `contracts/`
+- Liquidity-group dedup, deeper hop iteration
+- Fee mechanism, analytics, observability
 
 ## D1 deliverable evidence
 
