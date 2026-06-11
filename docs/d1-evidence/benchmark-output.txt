@@ -3,25 +3,26 @@ Graph: 42 classic edges, 16 soroban edges
 
 Case                          Classic out      Soroban out       Winner out Mode     Type          vs Baseline
 --------------------------------------------------------------------------------------------------------------
-XLM -> USDC (100)              18.2351000       18.2116822       18.2351000 classic  single            0.00bps
-XLM -> USDC (1000)            182.3510000      181.6939579      182.3510000 classic  single            0.00bps
-XLM -> USDC (10000)          1823.4700000     1799.8806953     1823.4700000 classic  single            0.00bps
-USDC -> XLM (5000)          27351.9887595    26514.8357090    27351.9887595 classic  single            0.00bps
-USDC -> EURC (500)            432.7867785      433.3122138      433.3122138 soroban  multi-hop        +0.01bps
-USDC -> EURC (5000)          4318.7450496     4273.7312852     4318.7450496 classic  multi-hop        +1.21bps
-EURC -> USDC (500)            572.1580273      571.3291564      572.1580273 classic  single            0.00bps
-XLM -> EURC (1000)            157.9866250      158.4451278      158.4451278 soroban  single            0.00bps
-XLM -> EURC (10000)          1578.2523061     1574.4715154     1578.2523061 classic  multi-hop       +34.46bps
-USDC -> AQUA (100)         273112.7331605    21610.3221887   273112.7331605 classic  multi-hop       +66.82bps
-USDC -> AQUA (1000)       2725649.0525698    23297.6004649  2725649.0525698 classic  multi-hop      +183.24bps
-XLM -> AQUA (10000)       4981066.8059135    23392.7648169  4981066.8059135 classic  single            0.00bps
-AQUA -> EURC (1000)             0.3136172        0.3081357        0.3136172 classic  multi-hop     N/A (>100x)
-EURC -> AQUA (100)         312403.3895938    21839.5743328   312403.3895938 classic  multi-hop   +256152.00bps
-XLM -> VELO (10000)        536358.7260922                —   536358.7260922 classic  multi-hop       +20.38bps
-XRP -> USDC (500)             547.2120657        0.0001662      547.2120657 classic  single            0.00bps
-XLM -> USDC (100000)        18191.4853280    16537.3407190    18191.4853280 classic  multi-hop        +0.42bps
+XLM -> USDC (100)              18.3475000       18.3010816       18.3475000 classic  single            0.00bps
+XLM -> USDC (1000)            183.4750000      182.5177106      183.4750000 classic  single            0.00bps
+XLM -> USDC (10000)          1834.6918420     1806.5750346     1834.6918420 classic  single            0.00bps
+USDC -> XLM (5000)          27192.0129731    26419.1944038    27192.0129731 classic  single            0.00bps
+USDC -> EURC (500)            432.7867255      432.9709658      432.9709658 soroban  single            0.00bps
+USDC -> EURC (5000)          4319.6514116     4269.4013044     4319.6514116 classic  multi-hop        +3.31bps
+EURC -> USDC (500)            572.1580273      571.8677959      572.1580273 classic  single            0.00bps
+XLM -> EURC (1000)            159.0050000      158.8081036      159.0050000 classic  single            0.00bps
+XLM -> EURC (10000)          1588.0355021     1578.4793970     1588.0355021 classic  multi-hop       +72.23bps
+USDC -> AQUA (100)         271437.8837112    39109.7877300   271437.8837112 classic  multi-hop        +5.08bps
+USDC -> AQUA (1000)       2709750.8883385    45028.6873996  2709750.8883385 classic  multi-hop      +140.72bps
+XLM -> AQUA (10000)       4980169.2975801    24586.1582016  4980169.2975801 classic  single            0.00bps
+AQUA -> EURC (1000)             0.3155320        0.3157155        0.3157155 soroban  multi-hop     N/A (>100x)
+EURC -> AQUA (100)         310667.9457267    40759.9228288   310667.9457267 classic  multi-hop   +254673.49bps
+XLM -> VELO (10000)        541076.3313858                —   541076.3313858 classic  multi-hop       +90.58bps
+XRP -> USDC (500)             548.7640575        0.0005517      548.7640575 classic  multi-hop        +2.82bps
+XLM -> USDC (100000)        18281.9072956    16594.9162351    18281.9072956 classic  multi-hop        +0.98bps
+VELO -> EURC (600000)        1716.7297781                —     1716.7297781 classic  multi-hop     N/A (>100x)
 
-Beats cross-venue single-pool baseline: 9 of 17 (threshold >= 5)
-Multi-hop wins: 9 of 17 (threshold >= 2)
+Beats cross-venue single-pool baseline: 10 of 18 (threshold >= 5)
+Multi-hop wins: 10 of 18 (threshold >= 2)
 No Classic+Soroban mixing: structural
 D1 MEASURE-OF-COMPLETION: SATISFIED

@@ -93,11 +93,11 @@ atomically on-chain.
 - [benchmark-output.txt](./docs/d1-evidence/benchmark-output.txt) --
   human-readable CLI output
 
-**Headline result:** 14 token-pair test queries against mainnet, 9 beat
-the cross-venue single-pool baseline (D1 threshold: >= 5), 9 multi-hop
+**Headline result:** 18 token-pair test queries against mainnet, 10 beat
+the cross-venue single-pool baseline (D1 threshold: >= 5), 10 multi-hop
 wins (D1 threshold: >= 2), zero routes mix Classic and Soroban execution
 modes (enforced structurally). Flagship case: `EURC -> AQUA (100)` at
-**~25x (+256152 bps)** over the best direct-book option on either
+**~25x (+254673 bps)** over the best direct-book option on either
 venue. Full table and correction notes on regenerated evidence in the
 D1 report.
 

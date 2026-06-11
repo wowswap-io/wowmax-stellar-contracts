@@ -134,23 +134,24 @@ orderbooks, Ankr's public Soroban RPC for Soroswap pool reserves) on
 
 | Case | Classic out | Soroban out | Winner | Mode | Type | vs Baseline |
 |---|---|---|---|---|---|---|
-| XLM -> USDC (100) | 18.2351000 | 18.2116822 | 18.2351000 | classic | single | 0.00 bps |
-| XLM -> USDC (1000) | 182.3510000 | 181.6939579 | 182.3510000 | classic | single | 0.00 bps |
-| XLM -> USDC (10000) | 1823.4700000 | 1799.8806953 | 1823.4700000 | classic | single | 0.00 bps |
-| USDC -> XLM (5000) | 27351.9887595 | 26514.8357090 | 27351.9887595 | classic | single | 0.00 bps |
-| USDC -> EURC (500) | 432.7867785 | 433.3122138 | 433.3122138 | soroban | multi-hop | 0.01 bps |
-| USDC -> EURC (5000) | 4318.7450496 | 4273.7312852 | 4318.7450496 | classic | multi-hop | 1.21 bps |
-| EURC -> USDC (500) | 572.1580273 | 571.3291564 | 572.1580273 | classic | single | 0.00 bps |
-| XLM -> EURC (1000) | 157.9866250 | 158.4451278 | 158.4451278 | soroban | single | 0.00 bps |
-| XLM -> EURC (10000) | 1578.2523061 | 1574.4715154 | 1578.2523061 | classic | multi-hop | 34.46 bps |
-| USDC -> AQUA (100) | 273112.7331605 | 21610.3221887 | 273112.7331605 | classic | multi-hop | 66.82 bps |
-| USDC -> AQUA (1000) | 2725649.0525698 | 23297.6004649 | 2725649.0525698 | classic | multi-hop | 183.24 bps |
-| XLM -> AQUA (10000) | 4981066.8059135 | 23392.7648169 | 4981066.8059135 | classic | single | 0.00 bps |
-| AQUA -> EURC (1000) | 0.3136172 | 0.3081357 | 0.3136172 | classic | multi-hop | N/A (>100x) |
-| EURC -> AQUA (100) | 312403.3895938 | 21839.5743328 | 312403.3895938 | classic | multi-hop | 256152.00 bps |
-| XLM -> VELO (10000) | 536358.7260922 | — | 536358.7260922 | classic | multi-hop | 20.38 bps |
-| XRP -> USDC (500) | 547.2120657 | 0.0001662 | 547.2120657 | classic | single | 0.00 bps |
-| XLM -> USDC (100000) | 18191.4853280 | 16537.3407190 | 18191.4853280 | classic | multi-hop | 0.42 bps |
+| XLM -> USDC (100) | 18.3475000 | 18.3010816 | 18.3475000 | classic | single | 0.00 bps |
+| XLM -> USDC (1000) | 183.4750000 | 182.5177106 | 183.4750000 | classic | single | 0.00 bps |
+| XLM -> USDC (10000) | 1834.6918420 | 1806.5750346 | 1834.6918420 | classic | single | 0.00 bps |
+| USDC -> XLM (5000) | 27192.0129731 | 26419.1944038 | 27192.0129731 | classic | single | 0.00 bps |
+| USDC -> EURC (500) | 432.7867255 | 432.9709658 | 432.9709658 | soroban | single | 0.00 bps |
+| USDC -> EURC (5000) | 4319.6514116 | 4269.4013044 | 4319.6514116 | classic | multi-hop | 3.31 bps |
+| EURC -> USDC (500) | 572.1580273 | 571.8677959 | 572.1580273 | classic | single | 0.00 bps |
+| XLM -> EURC (1000) | 159.0050000 | 158.8081036 | 159.0050000 | classic | single | 0.00 bps |
+| XLM -> EURC (10000) | 1588.0355021 | 1578.4793970 | 1588.0355021 | classic | multi-hop | 72.23 bps |
+| USDC -> AQUA (100) | 271437.8837112 | 39109.7877300 | 271437.8837112 | classic | multi-hop | 5.08 bps |
+| USDC -> AQUA (1000) | 2709750.8883385 | 45028.6873996 | 2709750.8883385 | classic | multi-hop | 140.72 bps |
+| XLM -> AQUA (10000) | 4980169.2975801 | 24586.1582016 | 4980169.2975801 | classic | single | 0.00 bps |
+| AQUA -> EURC (1000) | 0.3155320 | 0.3157155 | 0.3157155 | soroban | multi-hop | N/A (>100x) |
+| EURC -> AQUA (100) | 310667.9457267 | 40759.9228288 | 310667.9457267 | classic | multi-hop | 254673.49 bps |
+| XLM -> VELO (10000) | 541076.3313858 | — | 541076.3313858 | classic | multi-hop | 90.58 bps |
+| XRP -> USDC (500) | 548.7640575 | 0.0005517 | 548.7640575 | classic | multi-hop | 2.82 bps |
+| XLM -> USDC (100000) | 18281.9072956 | 16594.9162351 | 18281.9072956 | classic | multi-hop | 0.98 bps |
+| VELO -> EURC (600000) | 1716.7297781 | — | 1716.7297781 | classic | multi-hop | N/A (>100x) |
 (All "out" values are in destination-token native units. "Baseline" is
 the best single-pool output achievable across both venues (Classic
 SDEX and Soroban) at the given input amount; `vs Baseline` is `(route - baseline) / baseline`
@@ -160,8 +161,8 @@ in basis points.)
 
 | Requirement | Threshold | Observed | Status |
 |---|---|---|---|
-| Pairs where route beats best single-pool baseline | ≥ 5 | **9** | ✓ |
-| Multi-hop wins | ≥ 2 | **9** | ✓ |
+| Pairs where route beats best single-pool baseline | ≥ 5 | **10** | ✓ |
+| Multi-hop wins | ≥ 2 | **10** | ✓ |
 | No Classic + Soroban mixing | structural | guaranteed by design | ✓ |
 
 Overall: **D1 measure-of-completion satisfied.**
@@ -267,7 +268,27 @@ transit topology — including a 100,000 XLM trade that the optimizer
 splits between the direct book and an XLM->XRP->USDC leg, the exact
 proxy-transit pattern the feature targets. Numbers in the table above
 are a fresh frozen snapshot on the expanded graph; thresholds hold
-with margin (7 of 14 beat baseline, 7 multi-hop wins).
+with margin (9 of 17 beat baseline, 9 multi-hop wins).
+
+**Three-hop routing and a 600,000 VELO showcase (2026-06-11, fifth
+update):** the router gained a third hop — src -> via1 -> via2 -> dst
+compositions on top of the direct and single-via families, with a
+progressive cycle-safe fallback (the full candidate set, then the
+better-yielding ordering of each unordered via pair, then two-hop
+only). On Stellar's hub-and-spoke liquidity this serves pairs whose
+deep books live on DIFFERENT hubs; the benchmark gained a
+VELO -> EURC (600,000) case targeting exactly that topology (VELO is
+deep against XLM and near-dust against EURC directly, while EURC's
+depth sits against USDC). The same work surfaced and fixed a latent
+grid-boundary interpolation bug: float64 narrowing of the tick
+position could index one slot past the grid and silently drop flow in
+rare boundary cases. This fifth snapshot is frozen on the 3-hop
+router: 10 of 18 cases beat the
+single-pool baseline, 10 multi-hop wins. Two stale
+prose figures left behind by the 0ef137c fix are also corrected: the
+previous update's closing parenthetical now carries the numbers that
+snapshot actually froze (9 of 17, not 7 of 14), and the README query
+count matches the case set.
 
 ## 8. How to reproduce
 
