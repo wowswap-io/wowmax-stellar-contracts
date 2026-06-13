@@ -46,6 +46,27 @@ pub struct Strand {
     pub hops: Vec<Hop>,
 }
 
+#[contracttype]
+#[derive(Clone)]
+pub struct Fill {
+    pub venue: u32,
+    pub pool: Address,
+    pub token_out: Address,
+    pub parts: u32,
+    pub aqua_router: Address,
+    pub aqua_pool_tokens: Vec<Address>,
+    pub aqua_pool_index: BytesN<32>,
+    pub soroswap_router: Address,
+    pub soroswap_path: Vec<Address>,
+}
+
+#[contracttype]
+#[derive(Clone)]
+pub struct Stage {
+    pub token: Address,
+    pub fills: Vec<Fill>,
+}
+
 #[contract]
 pub struct WowmaxAggregator;
 
@@ -492,6 +513,104 @@ impl WowmaxAggregator {
         }
 
         // Forward all proceeds to the user.
+        token::Client::new(&env, &token_out).transfer(&contract, &user, &total_out);
+        total_out
+    }
+
+    /// S5 merge executor: run a topologically-ordered DAG of stages. Each stage
+    /// splits the contract's CURRENT balance of its source token across its
+    /// fills (one pool swap per fill). A token consumed by several branches is
+    /// split ONCE on the pooled total -> fan-in/merge, one swap per graph edge.
+    pub fn swap_merge(
+        env: Env,
+        user: Address,
+        token_in: Address,
+        token_out: Address,
+        amount_in: i128,
+        amount_out_min: i128,
+        deadline: u64,
+        stages: Vec<Stage>,
+    ) -> i128 {
+        user.require_auth();
+        let contract = env.current_contract_address();
+
+        let n = stages.len();
+        if n == 0 {
+            panic!("empty stages");
+        }
+
+        // Net-of-dust: measure token_out gained by THIS call.
+        let out_before: i128 = token::Client::new(&env, &token_out).balance(&contract);
+
+        // Pull the whole input once.
+        token::Client::new(&env, &token_in).transfer(&user, &contract, &amount_in);
+
+        let mut si = 0u32;
+        while si < n {
+            let stage = stages.get(si).unwrap();
+            let stage_token = stage.token.clone();
+
+            let bal: i128 = token::Client::new(&env, &stage_token).balance(&contract);
+            if bal <= 0 {
+                si += 1;
+                continue;
+            }
+
+            let fills = stage.fills;
+            let fcount = fills.len();
+            if fcount == 0 {
+                panic!("empty stage");
+            }
+
+            let mut total_parts: i128 = 0;
+            let mut fi = 0u32;
+            while fi < fcount {
+                total_parts += fills.get(fi).unwrap().parts as i128;
+                fi += 1;
+            }
+            if total_parts <= 0 {
+                panic!("stage parts zero");
+            }
+
+            let mut allocated: i128 = 0;
+            fi = 0u32;
+            while fi < fcount {
+                let fill = fills.get(fi).unwrap();
+                let fill_in: i128 = if fi == fcount - 1 {
+                    bal - allocated
+                } else {
+                    (bal * (fill.parts as i128)) / total_parts
+                };
+                allocated += fill_in;
+
+                if fill_in > 0 {
+                    if fill.venue == 0 {
+                        exec_soroswap_edge(
+                            &env, &contract, &fill.soroswap_router, &fill.pool,
+                            &stage_token, fill_in, &fill.soroswap_path, deadline,
+                        );
+                    } else if fill.venue == 1 {
+                        exec_aqua_edge(
+                            &env, &contract, &fill.aqua_router, &fill.aqua_pool_tokens,
+                            &fill.aqua_pool_index, &stage_token, &fill.token_out, fill_in,
+                        );
+                    } else if fill.venue == 2 {
+                        exec_phoenix_edge(&env, &contract, &fill.pool, &stage_token, fill_in);
+                    } else {
+                        panic!("bad venue");
+                    }
+                }
+                fi += 1;
+            }
+            si += 1;
+        }
+
+        let out_after: i128 = token::Client::new(&env, &token_out).balance(&contract);
+        let total_out: i128 = out_after - out_before;
+        if total_out < amount_out_min {
+            panic!("amount_out_min not met");
+        }
+
         token::Client::new(&env, &token_out).transfer(&contract, &user, &total_out);
         total_out
     }
