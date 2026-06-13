@@ -10,7 +10,7 @@ repository = "https://github.com/wowswap-io/wowmax-stellar-contracts"
 homepage = "https://github.com/wowswap-io/wowmax-stellar-contracts"
 
 [workspace.dependencies]
-soroban-sdk = "22.0.7"
+soroban-sdk = "25.3.1"
 wowmax-adapter-interface={path="./adapters/interface", package="wowmax-adapter-interface"}
 test-utils = { path = "./test-utils" }
 

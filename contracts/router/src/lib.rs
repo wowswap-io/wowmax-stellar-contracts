@@ -1,883 +1,630 @@
 #![no_std]
+//! WOWMAX Stellar aggregator — on-chain executor of VFalgo routes.
+//!
+//! Thin plan executor. All routing intelligence (VFalgo) stays
+//! OFF-chain; the contract only executes what it is handed. No VFalgo
+//! IP lives here.
+//!
+//! Progress:
+//!   S1  swap_soroswap  — one Soroswap path swap (DONE, mainnet)
+//!   S2  swap_aqua      — one Aquarius swap_chained hop (this file)
+//! Next: cross-protocol single-call plan, then the parts splitter (S4).
+
+use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
 use soroban_sdk::{
-    contract, contractimpl, token::Client as TokenClient, Address, BytesN, Env, Vec,
+    contract, contractimpl, contracttype, symbol_short, token, vec, Address, BytesN, Env,
+    IntoVal, Symbol, Val, Vec,
 };
 
-mod adapters;
-mod error;
-mod event;
-mod models;
-mod storage;
-mod test;
-
-use error::RouterError;
-use models::{Protocol, Adapter, DexDistribution, MAX_DISTRIBUTION_LENGTH};
-use wowmax_adapter_interface::AdapterClient;
-use storage::{
-    extend_instance_ttl, get_adapter, get_admin, get_protocol_ids, has_adapter, is_initialized,
-    put_adapter, remove_adapter, set_admin, set_initialized, set_pause_protocol,
-};
-
-// Minimum amount to be traded
-const MIN_AMOUNT: i128 = 10;
-
-fn check_initialized(e: &Env) -> Result<(), RouterError> {
-    if is_initialized(e) {
-        Ok(())
-    } else {
-        Err(RouterError::NotInitialized)
-    }
+/// One edge of a route: a single swap on one venue. Flat struct (all
+/// fields present); the off-chain planner fills the venue-specific
+/// fields and leaves the rest as harmless placeholders (empty Vec, zero
+/// BytesN, any valid Address) for venues that don't use them.
+///   venue: 0 = Soroswap, 1 = Aquarius, 2 = Phoenix
+#[contracttype]
+#[derive(Clone)]
+pub struct Hop {
+    pub venue: u32,
+    pub pool: Address,
+    pub token_in: Address,
+    pub token_out: Address,
+    pub aqua_router: Address,
+    pub aqua_pool_tokens: Vec<Address>,
+    pub aqua_pool_index: BytesN<32>,
+    pub soroswap_router: Address,
+    pub soroswap_path: Vec<Address>,
 }
 
-fn check_admin(e: &Env) -> Result<(), RouterError> {
-    let admin: Address = get_admin(&e)?;
-    admin.require_auth();
-    Ok(())
-}
-
-fn check_parameters(
-    e: &Env,
-    to: Address,
-    distribution: Vec<DexDistribution>,
-) -> Result<(), RouterError> {
-    check_initialized(e)?;
-    to.require_auth();
-
-    if distribution.len() > MAX_DISTRIBUTION_LENGTH {
-        return Err(RouterError::DistributionLengthExceeded);
-    }
-    for dist in distribution {
-        if dist.parts == 0 {
-            return Err(RouterError::ZeroDistributionPart);
-        }
-    }
-
-    Ok(())
-}
-
-fn calculate_distribution_amounts_and_check_paths( 
-    env: &Env,
-    token_in: &Address,
-    token_out: &Address,
-    total_amount: i128,
-    distribution: &Vec<DexDistribution>,
-) -> Result<Vec<i128>, RouterError> {
-    let total_parts: u32 = distribution.iter().try_fold(0u32, |acc, dist| {
-        acc.checked_add(dist.parts).ok_or(RouterError::ArithmeticError)
-    })?;
-
-    let total_parts: i128 = total_parts.into();
-    let mut total_swapped = 0;
-    let mut swap_amounts = soroban_sdk::Vec::new(env);
-
-    for (index, dist) in distribution.iter().enumerate() {
-        // Check that all paths start with same token
-        if dist.path.get(0) != Some(token_in.clone()) {
-            return Err(RouterError::InvalidPath);
-        }
-        // check that all paths end with token_out
-        if dist.path.last() != Some(token_out.clone()) {
-            return Err(RouterError::InvalidPath);
-        }
-
-        let swap_amount = if index == (distribution.len() - 1) as usize {
-            total_amount
-                .checked_sub(total_swapped)
-                .ok_or(RouterError::ArithmeticError)?
-        } else {
-            let amount = total_amount
-                .checked_mul(dist.parts.into())
-                .and_then(|prod| prod.checked_div(total_parts))
-                .ok_or(RouterError::ArithmeticError)?;
-            total_swapped = total_swapped
-                .checked_add(amount)
-                .ok_or(RouterError::ArithmeticError)?;
-            amount
-        };
-
-        if swap_amount < MIN_AMOUNT {
-            return Err(RouterError::NegibleAmount);
-        }
-
-        swap_amounts.push_back(swap_amount);
-    }
-
-    Ok(swap_amounts)
-}
-
-pub fn get_adapter_client(
-    e: &Env,
-    protocol_id: Protocol,
-) -> Result<AdapterClient<'_>, RouterError> {
-    let adapter = get_adapter(&e, protocol_id.clone())?;
-    if adapter.paused {
-        return Err(RouterError::ProtocolPaused);
-    }
-    Ok(AdapterClient::new(&e, &adapter.router))
-}
-
-/*
-    SOROSWAP AGGREGATOR SMART CONTRACT INTERFACE:
-*/
-
-pub trait WowmaxStellarRouterTrait {
-    /* ADMIN FUNCTIONS */
-
-    /// Initializes the contract and sets the soroswap_router address.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - The environment in which the contract is running.
-    /// * `admin` - The address of the administrator.
-    /// * `adapter_vec` - A vector containing the adapters to be initialized.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError::AlreadyInitialized` error if the contract is already initialized.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(())` if the initialization is successful.
-    fn initialize(e: Env, admin: Address, adapter_vec: Vec<Adapter>)
-        -> Result<(), RouterError>;
-
-    /// Updates the adapters in the contract.
-    ///
-    /// This function overwrites any existing protocol address pairs if they exist.
-    /// If an adapter does not exist, it will add it.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - The environment in which the contract is running.
-    /// * `adapter_vec` - A vector containing the adapters to be updated.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if the contract is not initialized or if the caller is not the admin.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(())` if the adapters are successfully updated.
-    fn update_adapters(e: Env, adapter_vec: Vec<Adapter>) -> Result<(), RouterError>;
-
-    /// Removes an adapter from the contract.
-    ///
-    /// This function removes the adapter associated with the specified protocol ID.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - The environment in which the contract is running.
-    /// * `protocol_id` - The ID of the protocol whose adapter is to be removed.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if the contract is not initialized or if the caller is not the admin.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(())` if the adapter is successfully removed.
-    fn remove_adapter(e: Env, protocol_id: Protocol) -> Result<(), RouterError>;
-
-    /// Sets the paused state of the protocol in the aggregator.
-    ///
-    /// # Argumentsnts
-    /// * `e` - The runtime environment.t.
-    /// * `protocol_id` - The ID of the protocol to set the paused state for.
-    /// * `paused` - The boolean value indicating whether the protocol should be paused or not.
-    ///
-    /// # Returns
-    /// Returns `Ok(())` if the operation is successful, otherwise returns an `RouterError`.
-    fn set_pause(e: Env, protocol_id: Protocol, paused: bool) -> Result<(), RouterError>;
-
-    /// Upgrades the contract with new WebAssembly (WASM) code.
-    ///
-    /// This function updates the contract with new WASM code provided by the `new_wasm_hash`.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - The runtime environment.
-    /// * `new_wasm_hash` - The hash of the new WASM code to upgrade the contract to.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if the contract is not initialized or if the caller is not the admin.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(())` if the upgrade is successful.
-    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), RouterError>;
-
-    /// Sets the `admin` address.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - An instance of the `Env` struct.
-    /// * `new_admin` - The address to set as the new `admin`.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the Router is not yet initialized or if the caller is not the existing `admin`.
-    fn set_admin(e: Env, new_admin: Address) -> Result<(), RouterError>;
-
-    /* SWAP FUNCTION */
-
-    /// Swaps an exact amount of input tokens for output tokens across multiple DEXes.
-    ///
-    /// This function performs a swap operation where an exact amount of input tokens is exchanged for output tokens,
-    /// distributed across multiple DEXes as specified by the `distribution` parameter.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - The runtime environment.
-    /// * `token_in` - The address of the input token.
-    /// * `token_out` - The address of the output token.
-    /// * `amount_in` - The exact amount of input tokens to be swapped.
-    /// * `amount_out_min` - The minimum amount of output tokens expected to receive.
-    /// * `distribution` - A vector specifying how the swap should be distributed across different DEXes.
-    /// * `to` - The address to receive the output tokens.
-    /// * `deadline` - The time by which the swap must be completed.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if any of the following conditions are met:
-    /// - The parameters are invalid.
-    /// - The swap amounts calculation fails.
-    /// - There is an arithmetic error.
-    /// - The final output amount is less than the minimum expected amount.
-    ///
-    /// # Returns
-    ///
-    /// Returns a vector of vectors, where each inner vector contains the swap amounts for each DEX if the operation is successful.
-    fn swap_exact_tokens_for_tokens(
-        env: Env,
-        token_in: Address,
-        token_out: Address,
-        amount_in: i128,
-        amount_out_min: i128,
-        distribution: Vec<DexDistribution>,
-        to: Address,
-        deadline: u64,
-    ) -> Result<Vec<Vec<i128>>, RouterError>;
-
-    /// Swaps tokens for an exact amount of output tokens across multiple DEXes.
-    ///
-    /// This function performs a swap operation where tokens are exchanged for an exact amount of output tokens,
-    /// distributed across multiple DEXes as specified by the `distribution` parameter.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - The runtime environment.
-    /// * `token_in` - The address of the input token.
-    /// * `token_out` - The address of the output token.
-    /// * `amount_out` - The exact amount of output tokens to be received.
-    /// * `amount_in_max` - The maximum amount of input tokens to be spent.
-    /// * `distribution` - A vector specifying how the swap should be distributed across different DEXes.
-    /// * `to` - The address to receive the output tokens.
-    /// * `deadline` - The time by which the swap must be completed.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if any of the following conditions are met:
-    /// - The parameters are invalid.
-    /// - The swap amounts calculation fails.
-    /// - There is an arithmetic error.
-    /// - The final input amount exceeds the maximum allowed.
-    ///
-    /// # Returns
-    ///
-    /// Returns a vector of vectors, where each inner vector contains the swap amounts for each DEX if the operation is successful.
-    fn swap_tokens_for_exact_tokens(
-        e: Env,
-        token_in: Address,
-        token_out: Address,
-        amount_out: i128,
-        amount_in_max: i128,
-        distribution: Vec<DexDistribution>,
-        to: Address,
-        deadline: u64,
-    ) -> Result<Vec<Vec<i128>>, RouterError>;
-
-    /*  *** Read only functions: *** */
-
-    /// Retrieves the administrator address of the contract.
-    ///
-    /// This function returns the current administrator address of the contract.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - A reference to the runtime environment.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if the contract is not initialized.
-    ///
-    /// # Returns
-    ///
-    /// Returns the address of the current administrator if the operation is successful.
-    fn get_admin(e: &Env) -> Result<Address, RouterError>;
-
-    /// Retrieves the list of adapters registered in the contract.
-    ///
-    /// This function returns a vector containing all the adapters registered in the contract.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - A reference to the runtime environment.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if the contract is not initialized or if there are issues retrieving adapters.
-    ///
-    /// # Returns
-    ///
-    /// Returns a vector of `Adapter` objects if the operation is successful.
-    fn get_adapters(e: &Env) -> Result<Vec<Adapter>, RouterError>;
-
-
-    /// Retrieves the paused state of a specific protocol adapter.
-    ///
-    /// This function returns whether the adapter associated with the specified `protocol_id` is currently paused.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - A reference to the runtime environment.
-    /// * `protocol_id` - The ID of the protocol whose paused state is to be retrieved.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if there are issues retrieving the adapter or if the protocol ID is not found.
-    ///
-    /// # Returns
-    ///
-    /// Returns `true` if the adapter is paused, otherwise `false`.
-    fn get_paused(e: &Env, protocol_id: Protocol) -> Result<bool, RouterError>;
-
-    /// Retrieves the version number of the contract.
-    ///
-    /// This function returns the version number of the contract. If the WebAssembly (WASM) code is updated,
-    /// this number should be increased accordingly to reflect the new version.
-    ///
-    /// # Returns
-    ///
-    /// Returns the current version number of the contract as a `u32`.
-    fn get_version() -> u32;
+/// One parallel branch of the split. `parts` is the integer share of the
+/// total input (same model as the router's buildSorobanDistribution:
+/// strand_in = floor(amount_in * parts / total_parts), last strand takes
+/// the remainder). `hops` runs sequentially (multi-hop) within the branch.
+#[contracttype]
+#[derive(Clone)]
+pub struct Strand {
+    pub parts: u32,
+    pub hops: Vec<Hop>,
 }
 
 #[contract]
-struct WowmaxStellarRouter;
+pub struct WowmaxAggregator;
 
 #[contractimpl]
-impl WowmaxStellarRouterTrait for WowmaxStellarRouter {
-    /* ADMIN FUNCTIONS */
-
-    /// Initializes the contract and sets the soroswap_router address.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - The environment in which the contract is running.
-    /// * `admin` - The address of the administrator.
-    /// * `adapter_vec` - A vector containing the adapters to be initialized.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError::AlreadyInitialized` error if the contract is already initialized.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(())` if the initialization is successful.
-    fn initialize(
-        e: Env,
-        admin: Address,
-        adapter_vec: Vec<Adapter>,
-    ) -> Result<(), RouterError> {
-        if check_initialized(&e).is_ok() {
-            return Err(RouterError::AlreadyInitialized);
-        }
-        
-        admin.require_auth();
-
-        for adapter in adapter_vec.iter() {
-            put_adapter(&e, adapter);
-        }
-
-        set_admin(&e, admin.clone());
-
-        // Mark the contract as initialized
-        set_initialized(&e);
-        event::initialized(&e, admin, adapter_vec);
-        extend_instance_ttl(&e);
-        Ok(())
-    }
-
-    /// Updates the adapters in the contract.
-    ///
-    /// This function overwrites any existing protocol address pairs if they exist.
-    /// If an adapter does not exist, it will add it.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - The environment in which the contract is running.
-    /// * `adapter_vec` - A vector containing the adapters to be updated.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if the contract is not initialized or if the caller is not the admin.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(())` if the adapters are successfully updated.
-    fn update_adapters(e: Env, adapter_vec: Vec<Adapter>) -> Result<(), RouterError> {
-        check_admin(&e)?;
-
-        for adapter in adapter_vec.iter() {
-            put_adapter(&e, adapter);
-        }
-
-        event::protocols_updated(&e, adapter_vec);
-        extend_instance_ttl(&e);
-        Ok(())
-    }
-
-    /// Removes an adapter from the contract.
-    ///
-    /// This function removes the adapter associated with the specified protocol ID.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - The environment in which the contract is running.
-    /// * `protocol_id` - The ID of the protocol whose adapter is to be removed.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if the contract is not initialized or if the caller is not the admin.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(())` if the adapter is successfully removed.
-    fn remove_adapter(e: Env, protocol_id: Protocol) -> Result<(), RouterError> {
-        check_admin(&e)?;
-
-        remove_adapter(&e, protocol_id.clone());
-
-        event::protocol_removed(&e, protocol_id);
-        extend_instance_ttl(&e);
-        Ok(())
-    }
-
-    /// Sets the paused state of the protocol in the aggregator.
-    ///
-    /// # Argumentsnts
-    /// * `e` - The runtime environment.t.
-    /// * `protocol_id` - The ID of the protocol to set the paused state for.
-    /// * `paused` - The boolean value indicating whether the protocol should be paused or not.
-    ///
-    /// # Returns
-    /// Returns `Ok(())` if the operation is successful, otherwise returns an `RouterError`.
-    fn set_pause(e: Env, protocol_id: Protocol, paused: bool) -> Result<(), RouterError> {
-        check_admin(&e)?;
-
-        set_pause_protocol(&e, protocol_id.clone(), paused)?;
-
-        event::protocol_paused(&e, protocol_id, paused);
-        extend_instance_ttl(&e);
-        Ok(())
-    }
-
-    /// Sets a new administrator for the contract.
-    ///
-    /// This function updates the administrator of the contract to the specified `new_admin` address.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - The runtime environment.
-    /// * `new_admin` - The address of the new administrator.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if the contract is not initialized or if the caller is not the current admin.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(())` if the operation is successful.
-    fn set_admin(e: Env, new_admin: Address) -> Result<(), RouterError> {
-        check_admin(&e)?;
-
-        let admin: Address = get_admin(&e)?;
-        set_admin(&e, new_admin.clone());
-
-        event::new_admin(&e, admin, new_admin);
-        Ok(())
-    }
-
-    /// Upgrades the contract with new WebAssembly (WASM) code.
-    ///
-    /// This function updates the contract with new WASM code provided by the `new_wasm_hash`.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - The runtime environment.
-    /// * `new_wasm_hash` - The hash of the new WASM code to upgrade the contract to.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if the contract is not initialized or if the caller is not the admin.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(())` if the upgrade is successful.
-    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), RouterError> {
-        check_admin(&e)?;
-
-        e.deployer().update_current_contract_wasm(new_wasm_hash);
-        Ok(())
-    }
-
-    /// Swaps an exact amount of input tokens for output tokens across multiple DEXes.
-    ///
-    /// This function performs a swap operation where an exact amount of input tokens is exchanged for output tokens,
-    /// distributed across multiple DEXes as specified by the `distribution` parameter.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - The runtime environment.
-    /// * `token_in` - The address of the input token.
-    /// * `token_out` - The address of the output token.
-    /// * `amount_in` - The exact amount of input tokens to be swapped.
-    /// * `amount_out_min` - The minimum amount of output tokens expected to receive.
-    /// * `distribution` - A vector specifying how the swap should be distributed across different DEXes.
-    /// * `to` - The address to receive the output tokens.
-    /// * `deadline` - The time by which the swap must be completed.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if any of the following conditions are met:
-    /// - The parameters are invalid.
-    /// - The swap amounts calculation fails.
-    /// - There is an arithmetic error.
-    /// - The final output amount is less than the minimum expected amount.
-    ///
-    /// # Returns
-    ///
-    /// Returns a vector of vectors, where each inner vector contains the swap amounts for each DEX if the operation is successful.
-    fn swap_exact_tokens_for_tokens(
-        e: Env,
+impl WowmaxAggregator {
+    /// One Soroswap swap along `path`. (S1 — proven on mainnet.)
+    pub fn swap_soroswap(
+        env: Env,
+        user: Address,
+        soroswap_router: Address,
+        pool: Address,
         token_in: Address,
         token_out: Address,
         amount_in: i128,
         amount_out_min: i128,
-        distribution: Vec<DexDistribution>,
-        to: Address,
+        path: Vec<Address>,
         deadline: u64,
-    ) -> Result<Vec<Vec<i128>>, RouterError> {
-        extend_instance_ttl(&e);
-        check_parameters(
-            &e,
-            to.clone(),
-            distribution.clone(),
-        )?;
+    ) -> i128 {
+        user.require_auth();
+        let contract = env.current_contract_address();
 
-        let swap_amounts = calculate_distribution_amounts_and_check_paths(&e, &token_in, &token_out, amount_in, &distribution)?;
-        let mut swap_responses: Vec<Vec<i128>> = Vec::new(&e);
+        token::Client::new(&env, &token_in).transfer(&user, &contract, &amount_in);
 
-        // Check initial out balance
-        let initial_token_out_balance = TokenClient::new(&e, &token_out).balance(&to);
-
-        for (index, swap_amount) in swap_amounts.iter().enumerate() {
-            let dist = distribution
-                .get(index as u32)
-                .ok_or(RouterError::ArithmeticError)?;
-            let protocol_id = dist.protocol_id;
-            let adapter = get_adapter(&e, protocol_id.clone())?;
-
-            if adapter.paused {
-                return Err(RouterError::ProtocolPaused);
-            }
-
-            let response = match protocol_id {
-                models::Protocol::Soroswap => {
-                    adapters::soroswap::protocol_swap_exact_tokens_for_tokens(
-                        &e,
-                        &adapter.router,
-                        &swap_amount,
-                        &0, // amount_out_min: amount out min per protocol will allways be 0, we will then compare the toal amoiunt out
-                        &dist.path,
-                        &to,
-                        &deadline,
-                    )?
-                    
+        let transfer_args: Vec<Val> = vec![
+            &env,
+            contract.into_val(&env),
+            pool.into_val(&env),
+            amount_in.into_val(&env),
+        ];
+        env.authorize_as_current_contract(vec![
+            &env,
+            InvokerContractAuthEntry::Contract(SubContractInvocation {
+                context: ContractContext {
+                    contract: token_in.clone(),
+                    fn_name: symbol_short!("transfer"),
+                    args: transfer_args,
                 },
-                models::Protocol::Phoenix => {
-                    adapters::phoenix::protocol_swap_exact_tokens_for_tokens(
-                        &e,
-                        &adapter.router,
-                        &swap_amount,
-                        &0, // amount_out_min: amount out min per protocol will allways be 0, we will then compare the toal amoiunt out
-                        &dist.path,
-                        &to,
-                        &deadline,
-                    )?
-                },
-                models::Protocol::Aqua => {
-                    adapters::aqua::protocol_swap_exact_tokens_for_tokens(
-                        &e,
-                        &adapter.router,
-                        &swap_amount,
-                        &0, // amount_out_min: amount out min per protocol will allways be 0, we will then compare the toal amoiunt out
-                        &dist.path,
-                        &to,
-                        &dist.bytes,
-                    )?
-                },
-                models::Protocol::Comet => {
-                    adapters::comet::protocol_swap_exact_tokens_for_tokens(
-                        &e,
-                        &adapter.router,
-                        &swap_amount,
-                        &0, // amount_out_min: amount out min per protocol will allways be 0, we will then compare the toal amoiunt out
-                        &dist.path,
-                        &to,
-                    )?
-                },
-            };
-            swap_responses.push_back(response);
-        }
+                sub_invocations: vec![&env],
+            }),
+        ]);
 
-        // Check final token out balance
-        let final_token_out_balance = TokenClient::new(&e, &token_out).balance(&to);
-        let final_amount_out = final_token_out_balance
-            .checked_sub(initial_token_out_balance)
-            .ok_or(RouterError::ArithmeticError)?;
-
-        if final_amount_out < amount_out_min {
-            return Err(RouterError::InsufficientOutputAmount);
-        }
-
-        event::swap(
-            &e,
-            token_in,
-            token_out,
-            amount_in,
-            final_amount_out,
-            distribution,
-            to,
+        let args: Vec<Val> = vec![
+            &env,
+            amount_in.into_val(&env),
+            amount_out_min.into_val(&env),
+            path.into_val(&env),
+            contract.into_val(&env),
+            deadline.into_val(&env),
+        ];
+        let amounts: Vec<i128> = env.invoke_contract(
+            &soroswap_router,
+            &Symbol::new(&env, "swap_exact_tokens_for_tokens"),
+            args,
         );
-
-        Ok(swap_responses)
+        let out: i128 = amounts.last().unwrap_or(0);
+        if out < amount_out_min {
+            panic!("amount_out_min not met");
+        }
+        token::Client::new(&env, &token_out).transfer(&contract, &user, &out);
+        out
     }
 
-    /// Swaps tokens for an exact amount of output tokens across multiple DEXes.
+    /// One Aquarius swap through the router's `swap_chained`.
     ///
-    /// This function performs a swap operation where tokens are exchanged for an exact amount of output tokens,
-    /// distributed across multiple DEXes as specified by the `distribution` parameter.
+    /// `pool_tokens`  — the pool's ordered token vector (canonical, by
+    ///                  contract-id). For USDC/AQUA: [AQUA_SAC, USDC_SAC].
+    /// `pool_index`   — the pool hash (BytesN<32>) from get_pools.
+    /// `pool`         — the pool contract address (the router pulls
+    ///                  token_in into it; used for the auth subtree).
+    /// `token_in/out` — SAC contract ids.
     ///
-    /// # Arguments
+    /// swap_chained(user, swaps_chain, token_in, in_amount, out_min):
+    ///   swaps_chain = [ (pool_tokens, pool_index, token_out) ]   (single hop)
     ///
-    /// * `e` - The runtime environment.
-    /// * `token_in` - The address of the input token.
-    /// * `token_out` - The address of the output token.
-    /// * `amount_out` - The exact amount of output tokens to be received.
-    /// * `amount_in_max` - The maximum amount of input tokens to be spent.
-    /// * `distribution` - A vector specifying how the swap should be distributed across different DEXes.
-    /// * `to` - The address to receive the output tokens.
-    /// * `deadline` - The time by which the swap must be completed.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if any of the following conditions are met:
-    /// - The parameters are invalid.
-    /// - The swap amounts calculation fails.
-    /// - There is an arithmetic error.
-    /// - The final input amount exceeds the maximum allowed.
-    ///
-    /// # Returns
-    ///
-    /// Returns a vector of vectors, where each inner vector contains the swap amounts for each DEX if the operation is successful.
-    fn swap_tokens_for_exact_tokens(
-        e: Env,
+    /// Returns the amount of token_out delivered (u128 -> i128).
+    pub fn swap_aqua(
+        env: Env,
+        user: Address,
+        aqua_router: Address,
+        pool: Address,
+        pool_tokens: Vec<Address>,
+        pool_index: BytesN<32>,
         token_in: Address,
         token_out: Address,
-        amount_out: i128,
-        amount_in_max: i128,
-        distribution: Vec<DexDistribution>,
-        to: Address,
-        deadline: u64,
-    ) -> Result<Vec<Vec<i128>>, RouterError> {
-        extend_instance_ttl(&e);
-        check_parameters(
-            &e,
-            to.clone(),
-            distribution.clone(),
-        )?;
+        amount_in: i128,
+        amount_out_min: i128,
+    ) -> i128 {
+        user.require_auth();
+        let contract = env.current_contract_address();
+        let _ = &pool; // retained in signature for call-site compatibility; Aquarius auth targets the router, not the pool
 
-        let swap_amounts = calculate_distribution_amounts_and_check_paths(&e, &token_in, &token_out, amount_out, &distribution)?;
-        let mut swap_responses: Vec<Vec<i128>> = Vec::new(&e);
+        // 1) Pull input from the user.
+        token::Client::new(&env, &token_in).transfer(&user, &contract, &amount_in);
 
-        // Check initial in balance
-        let initial_token_in_balance = TokenClient::new(&e, &token_in).balance(&to);
-
-        for (index, swap_amount) in swap_amounts.iter().enumerate() {
-            let dist = distribution
-                .get(index as u32)
-                .ok_or(RouterError::ArithmeticError)?;
-            let protocol_id = dist.protocol_id;
-            let adapter = get_adapter(&e, protocol_id.clone())?;
-
-            if adapter.paused {
-                return Err(RouterError::ProtocolPaused);
-            }
-
-            let response = match protocol_id {
-                models::Protocol::Soroswap => {
-                    adapters::soroswap::protocol_swap_tokens_for_exact_tokens(
-                        &e,
-                        &adapter.router,
-                        &swap_amount,
-                        &i128::MAX,   // amount_in_max
-                        &dist.path,
-                        &to,
-                        &deadline,
-                    )?
+        // 2) Pre-authorize the router to move our token_in. Aquarius's
+        //    swap_chained pulls token_in from the holder TO THE ROUTER
+        //    itself (confirmed by simulation: transfer [contract ->
+        //    aqua_router]), then the router fans out to its pools. So the
+        //    authorized transfer target is `aqua_router`, NOT the pool.
+        let transfer_args: Vec<Val> = vec![
+            &env,
+            contract.into_val(&env),
+            aqua_router.into_val(&env),
+            amount_in.into_val(&env),
+        ];
+        env.authorize_as_current_contract(vec![
+            &env,
+            InvokerContractAuthEntry::Contract(SubContractInvocation {
+                context: ContractContext {
+                    contract: token_in.clone(),
+                    fn_name: symbol_short!("transfer"),
+                    args: transfer_args,
                 },
-                models::Protocol::Phoenix => {
-                    adapters::phoenix::protocol_swap_tokens_for_exact_tokens(
-                        &e,
-                        &adapter.router,
-                        &swap_amount,
-                        &i128::MAX,   // amount_in_max
-                        &dist.path,
-                        &to,
-                        &deadline,
-                    )?
-                },
-                models::Protocol::Aqua => {
-                    adapters::aqua::protocol_swap_tokens_for_exact_tokens(
-                        &e,
-                        &adapter.router,
-                        &swap_amount,
-                        // no amount_in_max, will be calculated by the adapter
-                        &dist.path,
-                        &to,
-                        &dist.bytes,
-                    )?
-                },
-                models::Protocol::Comet => {
-                    adapters::comet::protocol_swap_tokens_for_exact_tokens(
-                        &e,
-                        &adapter.router,
-                        &swap_amount, // amount_out
-                        &i128::MAX,   // amount_in_max
-                        &dist.path,
-                        &to,
-                    )?
-                },
-            };
-            swap_responses.push_back(response);
-        }
-        // Check final token in balance, so we did not spend more than amount_in_max
-        let final_token_in_balance = TokenClient::new(&e, &token_in).balance(&to);
-        let final_amount_in = initial_token_in_balance
-            .checked_sub(final_token_in_balance)
-            .ok_or(RouterError::ArithmeticError)?;
+                sub_invocations: vec![&env],
+            }),
+        ]);
 
-        if final_amount_in > amount_in_max {
-            return Err(RouterError::ExcessiveInputAmount);
-        }
-        event::swap(
-            &e,
-            token_in,
-            token_out,
-            final_amount_in,
-            amount_out,
-            distribution,
-            to,
+        // 3) Build swaps_chain = Vec<(Vec<Address>, BytesN<32>, Address)>
+        //    with a single hop, as an ScVal vector of 3-tuples (scvVec).
+        let hop: Vec<Val> = vec![
+            &env,
+            pool_tokens.into_val(&env),
+            pool_index.into_val(&env),
+            token_out.into_val(&env),
+        ];
+        let swaps_chain: Vec<Val> = vec![&env, hop.into_val(&env)];
+
+        let amount_in_u128: u128 = amount_in as u128;
+        let out_min_u128: u128 = amount_out_min as u128;
+
+        let args: Vec<Val> = vec![
+            &env,
+            // swap_chained pulls token_in FROM and delivers token_out TO
+            // this first arg. The contract holds the funds, so it is the
+            // contract — NOT the end user (who no longer holds token_in).
+            contract.into_val(&env),
+            swaps_chain.into_val(&env),
+            token_in.into_val(&env),
+            amount_in_u128.into_val(&env),
+            out_min_u128.into_val(&env),
+        ];
+        let out_u128: u128 = env.invoke_contract(
+            &aqua_router,
+            &Symbol::new(&env, "swap_chained"),
+            args,
         );
-        Ok(swap_responses)
-    }
+        let out: i128 = out_u128 as i128;
 
-    /*  *** Read only functions: *** */
-
-    /// Retrieves the administrator address of the contract.
-    ///
-    /// This function returns the current administrator address of the contract.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - A reference to the runtime environment.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if the contract is not initialized.
-    ///
-    /// # Returns
-    ///
-    /// Returns the address of the current administrator if the operation is successful.
-    fn get_admin(e: &Env) -> Result<Address, RouterError> {
-        check_initialized(&e)?;
-        Ok(get_admin(&e)?)
-    }
-
-    // /// Retrieves the list of adapters registered in the contract.
-    // ///
-    // /// This function returns a vector containing all the adapters registered in the contract.
-    // ///
-    // /// # Arguments
-    // ///
-    // /// * `e` - A reference to the runtime environment.
-    // ///
-    // /// # Errors
-    // ///
-    // /// Returns an `RouterError` if the contract is not initialized or if there are issues retrieving adapters.
-    // ///
-    // /// # Returns
-    // ///
-    // /// Returns a vector of `Adapter` objects if the operation is successful.
-    fn get_adapters(e: &Env) -> Result<Vec<Adapter>, RouterError> {
-        check_initialized(&e)?;
-
-        let protocol_ids = get_protocol_ids(e);
-        let mut adapter_vec = Vec::new(e);
-
-        // Iterate over each protocol ID and collect their adapter object
-        for protocol_id in protocol_ids.iter() {
-            if has_adapter(e, protocol_id.clone()) {
-                let adapter = get_adapter(e, protocol_id.clone())?;
-                adapter_vec.push_back(adapter);
-            }
+        // 4) Slippage guard.
+        if out < amount_out_min {
+            panic!("amount_out_min not met");
         }
 
-        Ok(adapter_vec)
+        // 5) Forward proceeds to the user.
+        token::Client::new(&env, &token_out).transfer(&contract, &user, &out);
+        out
     }
 
-    /// Retrieves the paused state of a specific protocol adapter.
+    /// One Phoenix swap. Phoenix trades through the POOL contract directly
+    /// (no router), unlike Soroswap/Aquarius.
     ///
-    /// This function returns whether the adapter associated with the specified `protocol_id` is currently paused.
+    ///   pool.swap(sender, offer_asset, offer_amount,
+    ///             max_belief_price: Option<i64>, max_spread_bps: Option<i64>)
+    ///       -> i128 (amount of the other asset received)
     ///
-    /// # Arguments
-    ///
-    /// * `e` - A reference to the runtime environment.
-    /// * `protocol_id` - The ID of the protocol whose paused state is to be retrieved.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `RouterError` if there are issues retrieving the adapter or if the protocol ID is not found.
-    ///
-    /// # Returns
-    ///
-    /// Returns `true` if the adapter is paused, otherwise `false`.
-    fn get_paused(e: &Env, protocol_id: Protocol) -> Result<bool, RouterError> {
-        let adapter = get_adapter(e, protocol_id)?;
-        Ok(adapter.paused)
+    /// `sender` is the CONTRACT (it holds the funds and receives output).
+    /// We pass None/None for price & spread limits; the final slippage
+    /// guard enforces amount_out_min end-to-end.
+    pub fn swap_phoenix(
+        env: Env,
+        user: Address,
+        pool: Address,
+        token_in: Address,
+        token_out: Address,
+        amount_in: i128,
+        amount_out_min: i128,
+    ) -> i128 {
+        user.require_auth();
+        let contract = env.current_contract_address();
+
+        // 1) Pull input from the user.
+        token::Client::new(&env, &token_in).transfer(&user, &contract, &amount_in);
+
+        // 2) Pre-authorize the pool to move our token_in. Target guess =
+        //    the pool itself (Phoenix pools pull the offer). If simulation
+        //    shows a different target, swap `pool` for it (as with Aqua).
+        let transfer_args: Vec<Val> = vec![
+            &env,
+            contract.into_val(&env),
+            pool.into_val(&env),
+            amount_in.into_val(&env),
+        ];
+        env.authorize_as_current_contract(vec![
+            &env,
+            InvokerContractAuthEntry::Contract(SubContractInvocation {
+                context: ContractContext {
+                    contract: token_in.clone(),
+                    fn_name: symbol_short!("transfer"),
+                    args: transfer_args,
+                },
+                sub_invocations: vec![&env],
+            }),
+        ]);
+
+        // 3) pool.swap has 7 params (verified from on-chain spec):
+        //    swap(sender, offer_asset, offer_amount,
+        //         ask_asset_min_amount: Option<i128>,
+        //         max_spread_bps:       Option<i64>,
+        //         deadline:             Option<u64>,
+        //         max_allowed_fee_bps:  Option<i64>) -> i128
+        //    Option::Some(x) is passed as x itself; Option::None as Void.
+        //    Enforce slippage in-pool via ask_asset_min_amount = out_min.
+        let none_val: Val = ().into_val(&env);
+        let args: Vec<Val> = vec![
+            &env,
+            contract.into_val(&env),
+            token_in.into_val(&env),
+            amount_in.into_val(&env),
+            amount_out_min.into_val(&env), // ask_asset_min_amount = Some(out_min)
+            none_val,                      // max_spread_bps = None
+            none_val,                      // deadline = None
+            none_val,                      // max_allowed_fee_bps = None
+        ];
+        let out: i128 = env.invoke_contract(&pool, &Symbol::new(&env, "swap"), args);
+
+        // 4) Slippage guard.
+        if out < amount_out_min {
+            panic!("amount_out_min not met");
+        }
+
+        // 5) Forward proceeds to the user.
+        token::Client::new(&env, &token_out).transfer(&contract, &user, &out);
+        out
     }
 
-    /// Retrieves the version number of the contract.
+    /// CROSS-PROTOCOL chain in ONE call (S3): leg 1 Aquarius, leg 2
+    /// Soroswap.  token_in --[aqua]--> mid_token --[soroswap]--> token_out.
     ///
-    /// This function returns the version number of the contract. If the WebAssembly (WASM) code is updated,
-    /// this number should be increased accordingly to reflect the new version.
+    /// The contract holds the intermediate (mid_token) and feeds its
+    /// ACTUAL balance into leg 2 — the exact mechanic the parts splitter
+    /// (S4) generalizes. Soroswap's own aggregator cannot do this: one
+    /// DexDistribution path is single-protocol.
     ///
-    /// # Returns
-    ///
-    /// Returns the current version number of the contract as a `u32`.
-    fn get_version() -> u32 {
-        1
+    /// Auth targets are the ones proven on mainnet:
+    ///   - Aquarius pulls token_in to the ROUTER  (swap_aqua / S2)
+    ///   - Soroswap pulls mid_token to the POOL    (swap_soroswap / S1)
+    pub fn swap_aqua_then_soroswap(
+        env: Env,
+        user: Address,
+        // leg 1 (Aquarius): token_in -> mid_token
+        aqua_router: Address,
+        aqua_pool_tokens: Vec<Address>,
+        aqua_pool_index: BytesN<32>,
+        token_in: Address,
+        mid_token: Address,
+        // leg 2 (Soroswap): mid_token -> token_out
+        soroswap_router: Address,
+        soroswap_pool: Address,
+        soroswap_path: Vec<Address>,
+        token_out: Address,
+        amount_in: i128,
+        amount_out_min: i128,
+        deadline: u64,
+    ) -> i128 {
+        user.require_auth();
+        let contract = env.current_contract_address();
+
+        // Pull leg-1 input from the user.
+        token::Client::new(&env, &token_in).transfer(&user, &contract, &amount_in);
+
+        // ---- LEG 1: Aquarius swap_chained (token_in -> mid_token) ----
+        let l1_transfer: Vec<Val> = vec![
+            &env,
+            contract.into_val(&env),
+            aqua_router.into_val(&env),
+            amount_in.into_val(&env),
+        ];
+        env.authorize_as_current_contract(vec![
+            &env,
+            InvokerContractAuthEntry::Contract(SubContractInvocation {
+                context: ContractContext {
+                    contract: token_in.clone(),
+                    fn_name: symbol_short!("transfer"),
+                    args: l1_transfer,
+                },
+                sub_invocations: vec![&env],
+            }),
+        ]);
+        let hop: Vec<Val> = vec![
+            &env,
+            aqua_pool_tokens.into_val(&env),
+            aqua_pool_index.into_val(&env),
+            mid_token.into_val(&env),
+        ];
+        let swaps_chain: Vec<Val> = vec![&env, hop.into_val(&env)];
+        let l1_args: Vec<Val> = vec![
+            &env,
+            contract.into_val(&env),
+            swaps_chain.into_val(&env),
+            token_in.into_val(&env),
+            (amount_in as u128).into_val(&env),
+            0u128.into_val(&env),
+        ];
+        let _mid_out: u128 = env.invoke_contract(
+            &aqua_router,
+            &Symbol::new(&env, "swap_chained"),
+            l1_args,
+        );
+
+        // Actual mid_token balance now held by the contract = leg-2 input.
+        let mid_amt: i128 = token::Client::new(&env, &mid_token).balance(&contract);
+
+        // ---- LEG 2: Soroswap swap_exact_tokens_for_tokens (mid -> out) ----
+        let l2_transfer: Vec<Val> = vec![
+            &env,
+            contract.into_val(&env),
+            soroswap_pool.into_val(&env),
+            mid_amt.into_val(&env),
+        ];
+        env.authorize_as_current_contract(vec![
+            &env,
+            InvokerContractAuthEntry::Contract(SubContractInvocation {
+                context: ContractContext {
+                    contract: mid_token.clone(),
+                    fn_name: symbol_short!("transfer"),
+                    args: l2_transfer,
+                },
+                sub_invocations: vec![&env],
+            }),
+        ]);
+        let l2_args: Vec<Val> = vec![
+            &env,
+            mid_amt.into_val(&env),
+            0i128.into_val(&env),
+            soroswap_path.into_val(&env),
+            contract.into_val(&env),
+            deadline.into_val(&env),
+        ];
+        let amounts: Vec<i128> = env.invoke_contract(
+            &soroswap_router,
+            &Symbol::new(&env, "swap_exact_tokens_for_tokens"),
+            l2_args,
+        );
+        let out: i128 = amounts.last().unwrap_or(0);
+
+        // Final slippage guard on the end-to-end output.
+        if out < amount_out_min {
+            panic!("amount_out_min not met");
+        }
+
+        // Forward proceeds to the user.
+        token::Client::new(&env, &token_out).transfer(&contract, &user, &out);
+        out
     }
+
+    /// S4 — SPLITTER. Execute a full VFalgo plan in ONE call: parallel
+    /// strands (split), each with sequential hops (multi-hop), across any
+    /// mix of Soroswap / Aquarius / Phoenix. Slippage is enforced on the
+    /// SUM of all strand outputs (atomic across the whole plan).
+    ///
+    ///   strand_in = floor(amount_in * parts / total_parts); the last
+    ///   strand takes the remainder so the split sums to amount_in exactly.
+    ///   Within a strand, each hop consumes the previous hop's output.
+    pub fn swap(
+        env: Env,
+        user: Address,
+        token_in: Address,
+        token_out: Address,
+        amount_in: i128,
+        amount_out_min: i128,
+        deadline: u64,
+        plan: Vec<Strand>,
+    ) -> i128 {
+        user.require_auth();
+        let contract = env.current_contract_address();
+
+        let n = plan.len();
+        if n == 0 {
+            panic!("empty plan");
+        }
+
+        // Pull the whole input once.
+        token::Client::new(&env, &token_in).transfer(&user, &contract, &amount_in);
+
+        // Sum parts.
+        let mut total_parts: i128 = 0;
+        let mut i = 0u32;
+        while i < n {
+            total_parts += plan.get(i).unwrap().parts as i128;
+            i += 1;
+        }
+        if total_parts <= 0 {
+            panic!("total parts zero");
+        }
+
+        // Execute strands.
+        let mut allocated: i128 = 0;
+        let mut total_out: i128 = 0;
+        let mut s = 0u32;
+        while s < n {
+            let strand = plan.get(s).unwrap();
+            let strand_in: i128 = if s == n - 1 {
+                amount_in - allocated
+            } else {
+                (amount_in * (strand.parts as i128)) / total_parts
+            };
+            allocated += strand_in;
+
+            // Sequential hops; each consumes the previous hop's output.
+            let hops = strand.hops;
+            let hn = hops.len();
+            if hn == 0 {
+                panic!("empty strand");
+            }
+            let mut hop_in: i128 = strand_in;
+            let mut h = 0u32;
+            while h < hn {
+                let hop = hops.get(h).unwrap();
+                let out: i128 = if hop.venue == 0 {
+                    exec_soroswap_edge(
+                        &env, &contract, &hop.soroswap_router, &hop.pool, &hop.token_in,
+                        hop_in, &hop.soroswap_path, deadline,
+                    )
+                } else if hop.venue == 1 {
+                    exec_aqua_edge(
+                        &env, &contract, &hop.aqua_router, &hop.aqua_pool_tokens,
+                        &hop.aqua_pool_index, &hop.token_in, &hop.token_out, hop_in,
+                    )
+                } else if hop.venue == 2 {
+                    exec_phoenix_edge(&env, &contract, &hop.pool, &hop.token_in, hop_in)
+                } else {
+                    panic!("bad venue");
+                };
+                hop_in = out;
+                h += 1;
+            }
+            total_out += hop_in; // last hop's output
+            s += 1;
+        }
+
+        // Atomic slippage guard on the SUM of all strands.
+        if total_out < amount_out_min {
+            panic!("amount_out_min not met");
+        }
+
+        // Forward all proceeds to the user.
+        token::Client::new(&env, &token_out).transfer(&contract, &user, &total_out);
+        total_out
+    }
+}
+
+// ----- internal per-venue edge executors (no user pull / no forward) -----
+// Each authorizes the venue's token pull (target proven on mainnet:
+// Soroswap -> pool, Aquarius -> router, Phoenix -> pool), invokes the
+// swap, and returns the output amount actually delivered to the contract.
+
+fn exec_soroswap_edge(
+    env: &Env,
+    contract: &Address,
+    router: &Address,
+    pool: &Address,
+    token_in: &Address,
+    amount_in: i128,
+    path: &Vec<Address>,
+    deadline: u64,
+) -> i128 {
+    let transfer_args: Vec<Val> = vec![
+        env,
+        contract.into_val(env),
+        pool.into_val(env),
+        amount_in.into_val(env),
+    ];
+    env.authorize_as_current_contract(vec![
+        env,
+        InvokerContractAuthEntry::Contract(SubContractInvocation {
+            context: ContractContext {
+                contract: token_in.clone(),
+                fn_name: symbol_short!("transfer"),
+                args: transfer_args,
+            },
+            sub_invocations: vec![env],
+        }),
+    ]);
+    let args: Vec<Val> = vec![
+        env,
+        amount_in.into_val(env),
+        0i128.into_val(env),
+        path.into_val(env),
+        contract.into_val(env),
+        deadline.into_val(env),
+    ];
+    let amounts: Vec<i128> =
+        env.invoke_contract(router, &Symbol::new(env, "swap_exact_tokens_for_tokens"), args);
+    amounts.last().unwrap_or(0)
+}
+
+fn exec_aqua_edge(
+    env: &Env,
+    contract: &Address,
+    aqua_router: &Address,
+    pool_tokens: &Vec<Address>,
+    pool_index: &BytesN<32>,
+    token_in: &Address,
+    token_out: &Address,
+    amount_in: i128,
+) -> i128 {
+    let transfer_args: Vec<Val> = vec![
+        env,
+        contract.into_val(env),
+        aqua_router.into_val(env),
+        amount_in.into_val(env),
+    ];
+    env.authorize_as_current_contract(vec![
+        env,
+        InvokerContractAuthEntry::Contract(SubContractInvocation {
+            context: ContractContext {
+                contract: token_in.clone(),
+                fn_name: symbol_short!("transfer"),
+                args: transfer_args,
+            },
+            sub_invocations: vec![env],
+        }),
+    ]);
+    let hop: Vec<Val> = vec![
+        env,
+        pool_tokens.into_val(env),
+        pool_index.into_val(env),
+        token_out.into_val(env),
+    ];
+    let swaps_chain: Vec<Val> = vec![env, hop.into_val(env)];
+    let args: Vec<Val> = vec![
+        env,
+        contract.into_val(env),
+        swaps_chain.into_val(env),
+        token_in.into_val(env),
+        (amount_in as u128).into_val(env),
+        0u128.into_val(env),
+    ];
+    let out_u128: u128 = env.invoke_contract(aqua_router, &Symbol::new(env, "swap_chained"), args);
+    out_u128 as i128
+}
+
+fn exec_phoenix_edge(
+    env: &Env,
+    contract: &Address,
+    pool: &Address,
+    token_in: &Address,
+    amount_in: i128,
+) -> i128 {
+    let transfer_args: Vec<Val> = vec![
+        env,
+        contract.into_val(env),
+        pool.into_val(env),
+        amount_in.into_val(env),
+    ];
+    env.authorize_as_current_contract(vec![
+        env,
+        InvokerContractAuthEntry::Contract(SubContractInvocation {
+            context: ContractContext {
+                contract: token_in.clone(),
+                fn_name: symbol_short!("transfer"),
+                args: transfer_args,
+            },
+            sub_invocations: vec![env],
+        }),
+    ]);
+    // Phoenix swap has 7 params; pass None for all 4 options (plan-level
+    // guard enforces the minimum on the summed output).
+    let none_val: Val = ().into_val(env);
+    let args: Vec<Val> = vec![
+        env,
+        contract.into_val(env),
+        token_in.into_val(env),
+        amount_in.into_val(env),
+        none_val,
+        none_val,
+        none_val,
+        none_val,
+    ];
+    let out: i128 = env.invoke_contract(pool, &Symbol::new(env, "swap"), args);
+    out
 }

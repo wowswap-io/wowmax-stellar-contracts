@@ -3,12 +3,11 @@ name = "wowmax-stellar-router"
 version = { workspace = true }
 license = { workspace = true }
 edition = { workspace = true }
-description = "WOWMAX Stellar Router — main DEX aggregator contract that dispatches swaps across protocol adapters (Soroswap, Phoenix, Aquarius, CometDEX)."
+description = "WOWMAX Stellar Router — on-chain cross-protocol DEX aggregator. Executes split + multi-hop routes that mix Soroswap, Phoenix, and Aquarius pools atomically in a single InvokeHostFunction, hitting exact pools (Aquarius pool_index, Soroswap pairs, Phoenix pools)."
 homepage = { workspace = true }
 repository = { workspace = true }
-authors = ["coderipper <joaquin@paltalabs.io>, esteblock"]
-readme = "README.md"
-keywords = ["no_std", "wasm", "soroswap", "amm", "soroban"]
+authors = ["WOWMAX"]
+keywords = ["no_std", "wasm", "soroban", "dex", "aggregator"]
 publish = true
 
 [lib]
@@ -16,8 +15,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 soroban-sdk = { workspace = true }
-wowmax-adapter-interface = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
-test-utils = { workspace = true, features = ["testutils"] }
