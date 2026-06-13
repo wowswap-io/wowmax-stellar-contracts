@@ -1,163 +1,112 @@
 # wowmax-stellar-contracts
 
-> Soroban smart contracts powering the [WOWMAX](https://wowmax.exchange)
-> Stellar DEX aggregator.
+> Soroban smart contracts for the [WOWMAX](https://wowmax.exchange) DEX
+> aggregator on Stellar — the on-chain **execution layer**.
 
-Part of the WOWMAX deliverable for the [Stellar Community Fund (SCF) Build
-Award](https://communityfund.stellar.org/), Integration Track.
-
-**Status:** D1 (path-finder algorithm) complete — see
-[`docs/D1-REPORT.md`](./docs/D1-REPORT.md) for the deliverable report and
-[`docs/d1-evidence/`](./docs/d1-evidence/) for live-mainnet benchmark
-artifacts. D2 (Stellar wallet integration) and D3 (swap interface &
-route visualization) are in progress in the WOWMAX frontend; their
-reports will land in `docs/` as the tranches close.
-
-**Live D1 endpoint:** [`https://stellar-router.wowmax.exchange`](https://stellar-router.wowmax.exchange)
-— public read-only API. Every request fetches fresh Stellar mainnet
-reserves and returns the WOWMAX optimal route alongside single-pool
-baselines for direct comparison. Try it:
-curl 'https://stellar-router.wowmax.exchange/quote?from=XLM&to=USDC&amount=100'
----
+Part of the WOWMAX deliverable for the
+[Stellar Community Fund (SCF) Build Award](https://communityfund.stellar.org/),
+Integration Track.
 
 ## What this is
 
-WOWMAX is a DEX aggregator that has executed over $2 billion in cumulative
-swap volume across 20+ EVM chains since 2022. This repository contains the
-**on-chain** half of the WOWMAX deployment on Stellar:
+This repository contains the **on-chain execution contract** for WOWMAX on
+Stellar: a Soroban contract that executes a pre-computed swap plan —
+splits, multi-hop paths, and **cross-protocol** routes — **atomically in a
+single transaction** across Stellar's Soroban DEX protocols.
 
-- a Soroban **router contract** that atomically executes split + multi-hop
-  routes across multiple Stellar DEX protocols
-- **protocol adapters** for Soroswap, Phoenix, Aquarius, and CometDEX
+The contract is a **plan executor**, not a router. Route selection (which
+pools, which splits, in what proportion) is computed off-chain by the
+WOWMAX pathfinder and handed to the contract as an explicit plan; the
+contract executes exactly that plan and enforces end-to-end slippage. This
+separation is deliberate: the contract holds no routing logic, so it can be
+audited as a thin, predictable executor.
 
-The **off-chain** half -- the routing algorithm (a TypeScript port of the
-WOWMAX value-function aggregator that powers WOWMAX on EVM) -- lives in a
-separate, private repository for IP reasons. This is consistent with how
-1inch and 0x operate: open on-chain contracts, closed-source pathfinders.
-SCF reviewers can request access to the router repo for verification
-purposes; the public benchmark evidence in `docs/d1-evidence/` reproduces
-the deliverable criteria end-to-end against live Stellar mainnet.
+### What it does that a per-protocol aggregator cannot
 
-## Architecture
+The common Soroban aggregator pattern dispatches each leg of a split to a
+single protocol (one protocol per path). This contract goes further:
 
-```
-+------------------+      +-------------------+
-|   off-chain      |      |   on-chain        |
-|   pathfinder     | ---> |   router contract |
-| (private repo)   |      |   (this repo)     |
-+------------------+      +---------+---------+
-                                    |
-                          +---------+---------+
-                          |                   |
-                  +-------v------+   +--------v-------+
-                  |  Soroswap    |   |   Phoenix      |
-                  |  adapter     |   |   adapter      |
-                  +--------------+   +----------------+
-                          |                   |
-                  +-------v------+   +--------v-------+
-                  |   Aquarius   |   |   CometDEX     |
-                  |   adapter    |   |   adapter      |
-                  +--------------+   +----------------+
-```
+- **Cross-protocol multi-hop in one call** — e.g. AQUA→USDC on Aquarius,
+  then USDC→XLM on Soroswap, executed as one atomic `InvokeHostFunction`.
+  The intermediate token is held by the contract between hops and fed
+  forward by its actual balance.
+- **Exact-pool targeting** — the plan names the precise pool for each leg
+  (Aquarius `pool_index`, Soroswap pair, Phoenix pool), rather than
+  delegating pool choice to a protocol's own router.
+- **Atomic slippage on the summed output** — `amount_out_min` is enforced
+  on the total across all split branches; any failing branch reverts the
+  whole transaction.
 
-- **router** -- main entry point. Receives swap requests with a distribution
-  across protocols and dispatches each leg to the appropriate adapter.
-- **adapters/soroswap** -- adapter for Soroswap (UniswapV2-style AMM).
-- **adapters/phoenix** -- adapter for Phoenix multihop router.
-- **adapters/aqua** -- adapter for Aquarius liquidity pool router.
-- **adapters/comet** -- adapter for CometDEX (BalancerV1-style multi-asset
-  pools).
-- **deployer** -- helper contract for deploying and initializing adapters.
+## Supported venues
 
-The off-chain pathfinder produces split + multi-hop routes by composing a
-discretized **value-function algebra** over pool quote functions. See
-[`docs/D1-REPORT.md`](./docs/D1-REPORT.md) section 3 for the algorithm
-summary. The router contract simply executes the route emitted by the
-pathfinder -- splitting / multi-hopping is decided off-chain and executed
-atomically on-chain.
-
-## Deliverable roadmap
-
-SCF Build Award tranches (numbering follows the grant document):
-
-| Tranche | Scope | Status |
+| Venue | Type | Status |
 |---|---|---|
-| **D1** | Routing path-finder algorithm | **complete** ([report](./docs/D1-REPORT.md)) |
-| **D2** | Stellar wallet integration — Stellar Wallets Kit (Freighter, xBull, Albedo, Lobstr, Hana), transaction signing, trustline detection with automatic ChangeTrust, fee estimation, network selection, account funding flows | in progress |
-| **D3** | Swap interface & route visualization in the WOWMAX UI — token selector, USD values, route visualization and route-type badge, gas estimation, price impact, confirmation flow, mobile-responsive, public Cloudflare Pages preview | in progress |
+| Soroswap | UniswapV2-style AMM (Soroban) | live |
+| Aquarius | StableSwap / weighted AMM (Soroban) | live |
+| Phoenix | XYK AMM (Soroban) | live |
 
-Classic SDEX path-payment execution ships inside D2/D3: the router's
-`/swap` endpoint decomposes the winning route into
-`PathPaymentStrictSend` strands and the frontend signs and submits
-them atomically per strand.
+Classic SDEX (Stellar's native order book) is **not** executed by this
+contract — SDEX is path-payment-based, not a contract call, and is handled
+in the classic execution path outside this repository. This contract covers
+the three Soroban DEX protocols.
 
-Engineering roadmap beyond the grant tranches (the on-chain half in
-this repository):
+## Contract interface
 
-- Soroban **router contract**: atomic split + multi-hop execution
-  on-chain, with the protocol adapters under `contracts/`
-- Liquidity-group dedup, deeper hop iteration
-- Fee mechanism, analytics, observability
+The contract (crate `wowmax-stellar-router`, struct `WowmaxAggregator`)
+exposes:
 
-## D1 deliverable evidence
+| Function | Purpose |
+|---|---|
+| `swap(user, token_in, token_out, amount_in, amount_out_min, deadline, plan)` | **Main entry.** Executes a `Vec<Strand>` plan: parallel splits, each with sequential hops, across any mix of the three venues. Slippage enforced on the summed output. |
+| `swap_soroswap(...)` | Single Soroswap swap along a path. |
+| `swap_aqua(...)` | Single Aquarius `swap_chained` hop on a named pool. |
+| `swap_phoenix(...)` | Single Phoenix pool swap. |
+| `swap_aqua_then_soroswap(...)` | Cross-protocol two-leg helper (Aquarius → Soroswap). |
 
-- [D1-REPORT.md](./docs/D1-REPORT.md) -- full deliverable report
-- [benchmark.json](./docs/d1-evidence/benchmark.json) -- machine-readable
-  benchmark output from live Stellar mainnet
-- [benchmark-output.txt](./docs/d1-evidence/benchmark-output.txt) --
-  human-readable CLI output
+### Plan model
 
-**Headline result:** 18 token-pair test queries against mainnet, 10 beat
-the cross-venue single-pool baseline (D1 threshold: >= 5), 10 multi-hop
-wins (D1 threshold: >= 2), zero routes mix Classic and Soroban execution
-modes (enforced structurally). Flagship case: `EURC -> AQUA (100)` at
-**~25x (+254673 bps)** over the best direct-book option on either
-venue. Full table and correction notes on regenerated evidence in the
-D1 report.
+```
+plan: Vec<Strand>
+Strand { parts: u32, hops: Vec<Hop> }
+Hop    { venue, pool, token_in, token_out, <venue-specific fields> }
+```
+
+The contract splits `amount_in` across strands by integer `parts`
+(`strand_in = floor(amount_in * parts / total_parts)`, the last strand
+taking the remainder), runs each strand's hops sequentially (each hop
+consuming the previous hop's output), sums the strand outputs, checks
+`amount_out_min`, and forwards the proceeds to `user`.
+
+## Mainnet validation
+
+All functions are validated on **Stellar mainnet** against live pools. See
+[`docs/REPORT.md`](./docs/REPORT.md) for the full report and
+[`docs/evidence/mainnet-tx.md`](./docs/evidence/mainnet-tx.md) for the
+transaction list with explorer links.
+
+Deployed contract (mainnet): see
+[`public/mainnet.contracts.json`](./public/mainnet.contracts.json).
 
 ## Building
-Produces optimized WASM artifacts in
-`contracts/target/wasm32-unknown-unknown/release/`.
 
-## Deployed addresses
+```bash
+cd contracts
+stellar contract build
+```
 
-- **Mainnet:** see [`public/mainnet.contracts.json`](./public/mainnet.contracts.json)
-  (populated after deploy)
-- **Testnet:** see [`public/testnet.contracts.json`](./public/testnet.contracts.json)
-  (populated after deploy)
+Requires `stellar` CLI 26+ and the `wasm32v1-none` target. Produces
+`contracts/target/wasm32v1-none/release/wowmax_stellar_router.wasm`.
 
 ## About WOWMAX
 
 [WOWMAX](https://wowmax.exchange) is a non-custodial DEX aggregator and
-copy-trading platform. As of mid-2026:
-
-- $2 B+ cumulative swap volume
-- 336 K+ unique traders
-- 2 M+ swaps executed
-- 20+ EVM chains supported
-- Stellar integration adds the first non-EVM chain to the WOWMAX network
+copy-trading platform: $2B+ cumulative swap volume, 336K+ traders, 20+ EVM
+chains. The Stellar integration adds the first non-EVM chain to the network.
 
 ## License
 
 [GPL-3.0-only](https://spdx.org/licenses/GPL-3.0-only.html). See
-[LICENSE](./LICENSE).
-
-This repository is a derivative work of an Apache-2.0 project; the
-original Apache-2.0 license text is preserved as
-[LICENSE.Apache-2.0](./LICENSE.Apache-2.0) per Apache-2.0 attribution
-requirements. See [NOTICE](./NOTICE) for the full attribution and
-relicensing rationale.
-
-## Attribution
-
-This project is a derivative work of
-[soroswap/aggregator](https://github.com/soroswap/aggregator), originally
-licensed under the Apache License, Version 2.0. The combined work
-(original code plus WOWMAX modifications) is distributed under
-GPL-3.0-only, as permitted by Apache-2.0's GPL-compatibility. See
-[NOTICE](./NOTICE) for the full attribution and the preserved upstream
-Apache-2.0 license text in
-[LICENSE.Apache-2.0](./LICENSE.Apache-2.0).
-
-The off-chain value-function pathfinder originates from WOWMAX's EVM
-aggregator and is not inherited from the Soroswap codebase.
+[LICENSE](./LICENSE). This repository began as a derivative of an
+Apache-2.0 project; the upstream license text is preserved in
+[LICENSE.Apache-2.0](./LICENSE.Apache-2.0) and attribution in
+[NOTICE](./NOTICE).

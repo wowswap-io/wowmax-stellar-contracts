@@ -1,0 +1,39 @@
+{
+  "network": "mainnet",
+  "networkPassphrase": "Public Global Stellar Network ; September 2015",
+  "contracts": {
+    "executor": {
+      "name": "wowmax-stellar-router",
+      "description": "On-chain swap-plan executor: atomic split + multi-hop + cross-protocol across Soroswap, Aquarius, Phoenix.",
+      "address": "CALCLWVZT6CQDSJV4MP3LOLSGKMYJNOWO5IL4Y54OY2EGZ2TF6RAF7QC"
+    }
+  },
+  "venues": {
+    "soroswap": {
+      "router": "CAG5LRYQ5JVEUI5TEID72EYOVX44TTUJT5BQR2J6J77FH65PCCFAJDDH",
+      "pools": {
+        "XLM/USDC": "CAM7DY53G63XA4AJRS24Z6VFYAFSSF76C3RZ45BE5YU3FQS5255OOABP"
+      }
+    },
+    "aquarius": {
+      "router": "CBQDHNBFBZYE4MKPWBSJOPIYLW4SFSXAXUTSXJN76GNKYVYPCKWC6QUK",
+      "pools": {
+        "USDC/AQUA": {
+          "address": "CA6GAFOJCW4MGQQBUCQUSA3CLIH25G4SNKB2JHYKZCVWZTNW5VXMSC4O",
+          "pool_index": "9ac7a9cde23ac2ada11105eeaa42e43c2ea8332ca0aa8f41f58d7160274d718e"
+        }
+      }
+    },
+    "phoenix": {
+      "factory": "CB4SVAWJA6TSRNOJZ7W2AWFW46D5VR4ZMFZKDIKXEINZCZEGZCJZCKMI",
+      "pools": {
+        "XLM/USDC": "CBHCRSVX3ZZ7EGTSYMKPEFGZNWRVCSESQR3UABET4MIW52N4EVU6BIZX"
+      }
+    }
+  },
+  "assets": {
+    "XLM": "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA",
+    "USDC": "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75",
+    "AQUA": "CAUIKL3IYGMERDRUN6YSCLWVAKIFG5Q4YJHUKM4S4NJZQIA3BAS6OJPK"
+  }
+}
