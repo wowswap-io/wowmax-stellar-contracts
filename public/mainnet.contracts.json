@@ -6,6 +6,19 @@
       "name": "wowmax-stellar-router",
       "description": "On-chain swap-plan executor: atomic split + multi-hop + cross-protocol across Soroswap, Aquarius, Phoenix.",
       "address": "CALCLWVZT6CQDSJV4MP3LOLSGKMYJNOWO5IL4Y54OY2EGZ2TF6RAF7QC"
+    },
+    "executor_merge": {
+      "name": "wowmax-stellar-router (merge)",
+      "description": "Pooled-merge executor: same swap/swap_* entry points plus swap_merge, which executes the route as topologically-ordered stages, splitting each token's pooled balance once across its pools (on-chain fan-in). One swap per graph edge keeps heavy multi-branch routes within the Soroban instruction budget.",
+      "address": "CAQPNW2M6G5SV3AWJKUCQPOZ5RKEUUFYGSASU4WRCIVSQRXRGHQ2HRYY",
+      "entrypoints": [
+        "swap",
+        "swap_soroswap",
+        "swap_aqua",
+        "swap_phoenix",
+        "swap_aqua_then_soroswap",
+        "swap_merge"
+      ]
     }
   },
   "venues": {

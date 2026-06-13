@@ -69,6 +69,45 @@ Hop    { venue: u32, pool, token_in, token_out, <venue-specific fields> }
   hop's output (read from the contract's actual balance).
 - Slippage: enforced once, on the sum of all strand outputs.
 
+## 4a. Pooled-merge executor (`swap_merge`)
+
+The linear plan above runs each leaf path independently. When several
+branches converge on a token that is then split again (a fan-in / merge
+graph), linearisation duplicates every hop the branches share — inflating
+the instruction count until heavy routes overflow the Soroban
+per-transaction budget, and splitting each branch's slice separately rather
+than the pooled whole.
+
+`swap_merge` (deployed at `CAQPNW2M6G5SV3AWJKUCQPOZ5RKEUUFYGSASU4WRCIVSQRXRGHQ2HRYY`) executes the route as
+**topologically-ordered stages** instead:
+
+```
+plan: Vec<Stage>
+Stage { token, fills: Vec<Fill> }
+Fill  { venue, pool, token_out, parts, <venue-specific fields> }
+```
+
+- Stages are processed in topological order, so when a stage runs every
+  upstream stage that produces its token has already executed.
+- Each stage reads the contract's **actual pooled balance** of its source
+  token (the sum of all upstream branches) and splits it across its fills by
+  `parts`; the last fill takes the remainder.
+- This is one swap per graph **edge** — no duplicated shared hops — which
+  (a) realises the true pooled fan-in optimum and (b) keeps multi-branch
+  routes inside the instruction budget.
+
+The per-venue authorization and the "contract holds funds between legs"
+model are unchanged; `swap_merge` reuses the same edge executors as the
+linear path. `amount_out_min` is enforced on the contract's net gain of the
+destination token (an output-balance delta, so any dust held before the call
+cannot inflate the result).
+
+A live mainnet `swap_merge` (AQUA → yXLM, a route that overflows the budget
+when linearised) is documented in
+[`evidence/mainnet-tx.md`](./evidence/mainnet-tx.md): it executed as 4 stages
+/ 7 edge-swaps in one `InvokeHostFunction`, delivering ~0.48% more than the
+classic path for the same input.
+
 ## 5. Mainnet validation
 
 All entry points were exercised on Stellar mainnet against live pools on
@@ -127,6 +166,7 @@ split-plan used in the validation above.
 | Item | Address |
 |---|---|
 | Executor contract | `CALCLWVZT6CQDSJV4MP3LOLSGKMYJNOWO5IL4Y54OY2EGZ2TF6RAF7QC` |
+| Executor contract (merge) | `CAQPNW2M6G5SV3AWJKUCQPOZ5RKEUUFYGSASU4WRCIVSQRXRGHQ2HRYY` |
 | Soroswap router | `CAG5LRYQ5JVEUI5TEID72EYOVX44TTUJT5BQR2J6J77FH65PCCFAJDDH` |
 | Soroswap XLM/USDC pair | `CAM7DY53G63XA4AJRS24Z6VFYAFSSF76C3RZ45BE5YU3FQS5255OOABP` |
 | Aquarius router | `CBQDHNBFBZYE4MKPWBSJOPIYLW4SFSXAXUTSXJN76GNKYVYPCKWC6QUK` |

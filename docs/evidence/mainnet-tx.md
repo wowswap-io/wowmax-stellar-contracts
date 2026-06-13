@@ -53,3 +53,38 @@ The `swap` entry point received this `--plan` (a `Vec<Strand>`): two
 strands, `parts` 1:1, one hop each — Soroswap (venue 0) and Phoenix
 (venue 2), both XLM→USDC. Unused venue-specific fields carry placeholders.
 See [`split-plan.json`](./split-plan.json).
+
+
+## Pooled-merge executor (`swap_merge`) — live mainnet swap
+
+A second contract,
+`CAQPNW2M6G5SV3AWJKUCQPOZ5RKEUUFYGSASU4WRCIVSQRXRGHQ2HRYY`,
+carries the same entry points plus `swap_merge`, a pooled fan-in executor.
+Where the linear plan (`Vec<Strand>`) runs each leaf path independently —
+duplicating any hop several branches share — `swap_merge` executes the route
+as topologically-ordered **stages** and splits each token's *pooled* on-chain
+balance once across its pools. The result is one swap per graph **edge**
+(not per leaf path), which both realises the true fan-in optimum and keeps
+heavy multi-branch routes inside the Soroban per-transaction instruction
+budget.
+
+| Function | Route | In | Out | Date (UTC) | Transaction |
+|---|---|---|---|---|---|
+| `swap_merge` | AQUA → yXLM (3 split branches converging on XLM, then a pooled XLM→yXLM split across Aquarius + Soroswap) | 1001.89 AQUA | 1.9889078 yXLM | 2026-06-13 16:38:53 | `822ff1c1ee1d5f27e9c635676c1798bd390ab72b279234a04e9a9eb36d60d9b4` |
+
+Explorer: https://stellar.expert/explorer/public/tx/822ff1c1ee1d5f27e9c635676c1798bd390ab72b279234a04e9a9eb36d60d9b4
+
+**Plan shape (4 stages, 7 edge-swaps):**
+
+- Stage 1 — AQUA: split across three pools (two Aquarius legs + one to a
+  shared intermediate), feeding XRP / USDC / XLM.
+- Stages 2–3 — XRP, USDC: each converted to XLM (one pool each).
+- Stage 4 — XLM: the contract reads its **pooled** XLM balance (the sum of
+  every upstream branch) and splits it once across an Aquarius and a Soroswap
+  pool into yXLM.
+
+Because the shared XLM→yXLM hop runs **once** on the pooled total rather than
+once per upstream branch, the same route that overflows the instruction
+budget when linearised fits comfortably as stages. The realised output
+(1.9889078 yXLM) is **~0.48% above** the classic SDEX path for the same input,
+and the pooled fan-in matches the route the off-chain pathfinder selected.
